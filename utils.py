@@ -68,7 +68,7 @@
 #         )
 #     return tru_recorder
 
-from llama_index import ServiceContext, VectorStoreIndex, StorageContext
+from llama_index.core import ServiceContext, VectorStoreIndex, StorageContext
 from llama_index.node_parser import SentenceWindowNodeParser
 from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
 from llama_index.indices.postprocessor import SentenceTransformerRerank
