@@ -1,10 +1,3 @@
-# from llama_index.core.indices.service_context import ServiceContext
-# from llama_index.core import (
-#     VectorStoreIndex,
-#     SimpleDirectoryReader,
-#     StorageContext,
-# )
-# from llama_index import ServiceContext, VectorStoreIndex, StorageContext
 from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
@@ -14,7 +7,8 @@ import os
 
 
 def build_sentence_window_index(
-    document, llm, embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default"
+    document, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
+    embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
 ):
     # create the sentence window node parser w/ default settings
     node_parser = SentenceWindowNodeParser.from_defaults(
