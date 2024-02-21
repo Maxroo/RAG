@@ -1,10 +1,17 @@
+import os
+from dotenv import load_dotenv, find_dotenv
+import openai
 from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
-import os
+from llama_index.llms.openai import OpenAI
 
+
+def get_openai_api_key():
+    _ = load_dotenv(find_dotenv())
+    return os.getenv("OPENAI_API_KEY")
 
 def build_sentence_window_index(
     document, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
