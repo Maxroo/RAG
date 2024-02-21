@@ -1,7 +1,7 @@
 import utils
 # from llama_index.response.notebook_utils import display_response    
 from pathlib import Path
-from llama_index import Document
+from llama_index.core import Document
 import requests as rq
 import json 
 import pickle
@@ -25,7 +25,7 @@ def check_indexed_files(file_id, indexed_files):
     return false
 
 def construct_request(question):
-    request = "$es/$index/_search?pretty -H 'Content-Type: application/json' -d'"
+    request = "export es=http://localhost:9200\n export index=enwiki\n$es/$index/_search?pretty -H 'Content-Type: application/json' -d'"
     object = {
             "query": {
                 "query_string" : {
