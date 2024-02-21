@@ -8,10 +8,11 @@ from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
 
-
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
     return os.getenv("OPENAI_API_KEY")
+
+openai.api_key = get_openai_api_key()
 
 def build_sentence_window_index(
     document, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
