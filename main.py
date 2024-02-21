@@ -25,7 +25,7 @@ def check_indexed_files(file_id, indexed_files):
     return false
 
 def construct_request(question):
-    request = "export es=http://localhost:9200\n export index=enwiki\n$es/$index/_search?pretty -H 'Content-Type: application/json' -d'"
+    request = "http://localhost:9200/enwiki/_search?pretty -H 'Content-Type: application/json' -d'"
     object = {
             "query": {
                 "query_string" : {
