@@ -25,11 +25,8 @@ def check_indexed_files(file_id, indexed_files):
         return True
     return false
 
-es = os.getenv("es")
-index = os.getenv("index")
-
 def construct_request(question):
-    request = f"{es}/{index}/_search?pretty -H"
+    request = "http://localhost:9200/enwiki/_search?pretty -H"
     object = {
             "query": {
                 "query_string" : {
