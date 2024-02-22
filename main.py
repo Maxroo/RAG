@@ -46,9 +46,17 @@ def construct_request(question):
 
 request, headers, payload = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
 response = rq.get(request, headers=headers, json=payload)
-print(response.json())
 
 
+# loop through the json file from response and get each field
+def read_resposne(response):
+    json_response = response.json()
+    for hit in json_response['hits']['hits']:
+        # Accessing individual fields in each hit
+        source = hit['_source']
+        print("Document ID:", hit['_id'])
+        print("text:", hit['text'])
 
+read_resposne(response)
 
 
