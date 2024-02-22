@@ -41,11 +41,11 @@ def construct_request(question):
             }
     object["query"]["query_string"]["query"] = question
     request = request + json.dumps(object) + "'"
-    return request
+    return request, parameter
 
-test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
+request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
 print(test)
-response = rq.get(test)
+response = rq.get(request, test)
 print(response)
 
 
