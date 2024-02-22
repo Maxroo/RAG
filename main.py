@@ -24,7 +24,7 @@ def construct_request(question):
         },
         "size": 2
     }
-    payload["query"]["query_string"]["query"] = question
+    payload["query"]["simple_query_string"]["query"] = question
     return request, headers, payload
 
 
