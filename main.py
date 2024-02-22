@@ -46,7 +46,7 @@ def construct_request(question):
 
 request, headers, payload = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
 response = rq.get(request, headers=headers, json=payload)
-print(response.content)
+print(response.json())
 
 
 
