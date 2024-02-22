@@ -5,6 +5,7 @@ from llama_index.core import Document
 import requests as rq
 import json 
 import pickle
+import os
 
 def get_indexed_files():
     try:
@@ -24,8 +25,11 @@ def check_indexed_files(file_id, indexed_files):
         return True
     return false
 
+es = os.getenv("es")
+index = os.getenv("index")
+
 def construct_request(question):
-    request = "$es/$index/_search?pretty -H 'Content-Type: application/json' -d'"
+    request = f"{es}/{index}/_search?pretty -H 'Content-Type: application/json' -d'"
     object = {
             "query": {
                 "query_string" : {
