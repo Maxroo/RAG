@@ -53,9 +53,10 @@ def read_resposne(response):
     json_response = response.json()
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
-        source = hit['_source']
-        print("Document ID:", hit['_id'])
-        print("text:", hit['text'])
+        # source = hit['_source']
+        # print("Document ID:", hit['_id'])
+        # print("text:", hit['text'])
+        print(hit)
 
 read_resposne(response)
 
