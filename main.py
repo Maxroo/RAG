@@ -55,7 +55,7 @@ def read_resposne(response):
         # Accessing individual fields in each hit
         source = hit['_source']
         print("Document ID:", hit['_id'])
-        print("opening_text:", source.get['opening_text'])
+        print("opening_text:", source.get('text', 'N/A'))
         # print(hit)
         print("\n\n\n\n")
 
