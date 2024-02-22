@@ -42,7 +42,7 @@ def construct_request(question):
         "size": 2
     }
     payload["query"]["query_string"]["query"] = question
-    return request, object
+    return request, headers, payload
 
 request, headers, payload = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
 response = rq.get(request, headers=headers, json=payload)
