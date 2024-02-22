@@ -16,9 +16,10 @@ def construct_request(question):
     # Request payload
     payload = {
         "query": {
-            "query_string": {
-                "query": "",
-                "fields": ["text"]
+            "simple_query_string" : {
+                "query": "Gregg Rolie and Rob Tyner, are not a keyboardist.",
+                "fields": ["title", "text"],
+                "default_operator": "or"
             }
         },
         "size": 2
@@ -34,11 +35,11 @@ def process_response(response):
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
         source = hit['_source']
-        # print("Document ID:", source.get('page_id', 'N/A'))
-        # print("opening_text:", source.get('opening_text', 'N/A'))
+        print("Document ID:", source.get('page_id', 'N/A'))
+        print("opening_text:", source.get('opening_text', 'N/A'))
         # # print(hit)
         # print("\n\n\n\n")
-        index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
+        #index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
     return index
         
 def get_indexed_files():
@@ -85,29 +86,47 @@ def main():
     question_count = 0
     correct = 0
     skiped = 0
+    test_quest = "Gregg Rolie and Rob Tyner, are not a keyboardist."
     # init log and result files to record
     log = open("log.txt", "w")
     result = open("result.txt", "w")
     # loop through the dev2hops.json file and get the question
     dev2hops = open("dev2hops.json", "r")
     dev2hops_json = json.load(dev2hops)
-    for statement in dev2hops_json:
-        index = None
-        question = statement['claim']
-        expected = statement['label']
-        request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload)   
-        index = process_response(response)
-        if(index == None):
-            #skip this question
-            log.write(f"Index is None for question {question}")
-            skiped += 1
-            continue
-        engine = get_sentence_window_query_engine(index)
-        answer = engine.query(question + "For this statement give me a true or false answer.")
-        if compare_response(answer, expected):
-            correct += 1 
+    print(len(dev2hops_json))
+    question = test_quest
+    index = None
+    expected = "supports"
+    request, headers, payload = construct_request(question)
+    response = rq.get(request, headers=headers, json=payload)   
+    index = process_response(response)
+    # if(index == None):
+    #     #skip this question
+    #     log.write(f"Index is None for question {question}")
+    #     skiped += 1
+    #     continue
+    # engine = get_sentence_window_query_engine(index)
+    # answer = engine.query(question + "For this statement give me a true or false answer.")
+    # if compare_response(answer, expected):
+    #     correct += 1 
         #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
+    # for statement in dev2hops_json:
+    #     index = None
+    #     question = statement['claim']
+    #     expected = statement['label']
+    #     request, headers, payload = construct_request(question)
+    #     response = rq.get(request, headers=headers, json=payload)   
+    #     index = process_response(response)
+    #     if(index == None):
+    #         #skip this question
+    #         log.write(f"Index is None for question {question}")
+    #         skiped += 1
+    #         continue
+    #     engine = get_sentence_window_query_engine(index)
+    #     answer = engine.query(question + "For this statement give me a true or false answer.")
+    #     if compare_response(answer, expected):
+    #         correct += 1 
+    #     #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
     result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
     log.close()
     result.close()
