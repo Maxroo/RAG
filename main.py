@@ -28,11 +28,9 @@ def check_indexed_files(file_id, indexed_files):
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
     object = {
-                "query": "",
-                "fields": ["text"],
-                "size":2
+            "size":2
             }
-    object["query"] = question
+    object["query"]["query_string"]["query"] = question
     return request, object
 
 request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
