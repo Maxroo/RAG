@@ -44,7 +44,7 @@ def construct_request(question):
 
 request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
 print(test)
-response = rq.get(request, params=test)
+response = rq.get(request)
 print(response)
 
 
