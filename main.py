@@ -40,9 +40,8 @@ def construct_request(question):
     return request, object
 
 request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
-print(test)
-response = rq.get(request)
-print(response)
+response = rq.get(request, test)
+print(response.content)
 
 
 
