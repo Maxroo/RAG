@@ -26,7 +26,7 @@ def check_indexed_files(file_id, indexed_files):
     return false
 
 def construct_request(question):
-    request = "http://localhost:9200/enwiki/_search?pretty -H"
+    request = "http://localhost:9200/enwiki/_search?pretty"
     object = {
             "query": {
                 "query_string" : {
