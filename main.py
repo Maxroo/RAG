@@ -25,7 +25,7 @@ def check_indexed_files(file_id, indexed_files):
     return false
 
 def construct_request(question):
-    request = "http://localhost:9200/enwiki/_search?pretty -H 'Content-Type: application/json' -d'"
+    request = "$es/$index/_search?pretty -H 'Content-Type: application/json' -d'"
     object = {
             "query": {
                 "query_string" : {
@@ -40,6 +40,7 @@ def construct_request(question):
     return request
 
 test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
+print(test)
 response = rq.get(test)
 print(response)
 
