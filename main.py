@@ -30,7 +30,7 @@ def construct_request(question):
     object = {
             "size":2
             }
-    object["query"]["query_string"]["query"] = question
+    # object["query"]["query_string"]["query"] = question
     return request, object
 
 request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
