@@ -29,7 +29,7 @@ es = os.getenv("es")
 index = os.getenv("index")
 
 def construct_request(question):
-    request = f"{es}/{index}/_search?pretty -H 'Content-Type: application/json' -d'"
+    request = f"{es}/{index}/_search?pretty -H"
     object = {
             "query": {
                 "query_string" : {
