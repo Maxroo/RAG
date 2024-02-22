@@ -27,14 +27,25 @@ def check_indexed_files(file_id, indexed_files):
 
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
-    object = {
-            "size":2
+    
+    headers = {
+    "Content-Type": "application/json"
+    }
+    # Request payload
+    payload = {
+        "query": {
+            "query_string": {
+                "query": "",
+                "fields": ["text"]
             }
-    # object["query"]["query_string"]["query"] = question
+        },
+        "size": 2
+    }
+    payload["query"]["query_string"]["query"] = question
     return request, object
 
-request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
-response = rq.get(request, params=test)
+request, headers, payload = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
+response = rq.get(request, headers=headers, json=payload)
 print(response.content)
 
 
