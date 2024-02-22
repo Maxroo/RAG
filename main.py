@@ -57,6 +57,7 @@ def read_resposne(response):
         # print("Document ID:", hit['_id'])
         # print("text:", hit['text'])
         print(hit)
+        print("\n\n\n\n")
 
 read_resposne(response)
 
