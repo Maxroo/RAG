@@ -40,7 +40,6 @@ def construct_request(question):
             "size":2
             }
     object["query"]["query_string"]["query"] = question
-    request = request + json.dumps(object) + "'"
     return request, object
 
 request, test = construct_request("Gregg Rolie and Rob Tyner, are not a keyboardist.")
