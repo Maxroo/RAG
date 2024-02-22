@@ -39,7 +39,7 @@ def construct_request(question):
                 "fields": ["text"]
             }
         },
-        "size": 2
+        "size": 3
     }
     payload["query"]["query_string"]["query"] = question
     return request, headers, payload
@@ -55,7 +55,7 @@ def read_resposne(response):
         # Accessing individual fields in each hit
         source = hit['_source']
         print("Document ID:", hit['_id'])
-        print("opening_text:", source.get('text', 'N/A'))
+        print("opening_text:", source.get('opening_text', 'N/A'))
         # print(hit)
         print("\n\n\n\n")
 
