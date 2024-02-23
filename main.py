@@ -121,21 +121,24 @@ def main():
     dev2hops = open("dev2hops.json", "r")
     dev2hops_json = json.load(dev2hops)
     for statement in dev2hops_json:
+        question_count += 1
         index = None
         question = statement['claim']
         expected = statement['label']
-        request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload)   
-        index = process_response(response)
-        if(index == None):
-            #skip this question
-            log.write(f"Index is None for question {question}")
-            skiped += 1
-            continue
-        engine = get_sentence_window_query_engine(index)
-        answer = engine.query(question + "Is the statement true or false?")
-        if compare_response(answer, expected):
-            correct += 1 
+        print(f"Question: {question}")
+        print(f"Expected: {expected}")
+        # request, headers, payload = construct_request(question)
+        # response = rq.get(request, headers=headers, json=payload)   
+        # index = process_response(response)
+        # if(index == None):
+        #     #skip this question
+        #     log.write(f"Index is None for question {question}")
+        #     skiped += 1
+        #     continue
+        # engine = get_sentence_window_query_engine(index)
+        # answer = engine.query(question + "Is the statement true or false?")
+        # if compare_response(answer, expected):
+        #     correct += 1 
         log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
     result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
     log.close()
