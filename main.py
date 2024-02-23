@@ -7,6 +7,7 @@ import json
 import pickle
 import os
 import sys
+import time
 
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -83,6 +84,7 @@ def compare_response(result, expected):
     return False
 
 def main():
+    start = time.time()
     question_count = 0
     correct = 0
     skiped = 0
@@ -139,6 +141,7 @@ def main():
             correct += 1 
         log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
     result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
+    result.write('It took', time.time()-start, 'seconds.')
     log.close()
     result.close()
 
