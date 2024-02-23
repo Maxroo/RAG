@@ -88,12 +88,12 @@ def main():
     question_count = 0
     correct = 0
     skiped = 0
-    log = open("log.txt", "w")
-    result = open("result.txt", "w")
-    
-    ## -------------- test ----------------
+    open('log.txt', 'w').close()
     # if len(sys.argv) > 1:
-    #     arg_question = sys.argv[1]
+    #     option = sys.argv[1]
+    #     if(option == "new"):
+    #         open('log.txt', 'w').close()
+    ## -------------- test ----------------
     
     # if(arg_question == "test"):
     #     arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
@@ -133,18 +133,23 @@ def main():
         index = process_response(response)
         if(index == None):
             #skip this question
+            
+            log = open("log.txt", "a")
             log.write(f"Index is None for question {question}")
+            log.close()
             skiped += 1
             continue
         engine = utils.get_sentence_window_query_engine(index)
         query_answer = engine.query(question + "Is the statement true or false?")
         answer = query_answer.response
         if compare_response(answer, expected):
-            correct += 1 
+            correct += 1
+        log = open("log.txt", "a") 
         log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
+        log.close()
+    result = open("result.txt", "w")
     result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
     result.write('Took', time.time()-start, 'seconds.')
-    log.close()
     result.close()
 
 if __name__ == "__main__":
