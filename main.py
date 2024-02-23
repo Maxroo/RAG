@@ -62,17 +62,18 @@ def check_indexed_files(file_id, indexed_files):
         
 def index_document(page_id, text):
     index_file_set = get_indexed_files()
+    index_file_set = set()
+    document = Document(text=text)
     if index_file_set == None:
         index_file_set = set()
     if page_id in index_file_set:
         index = utils.build_sentence_window_index(Documents)
         return index
     else:
+        index = utils.build_sentence_window_index(Documents, insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
-        document = Document(text=text)
         Documents = [document] 
-        index = utils.build_sentence_window_index(Documents, insert = True)
         return index
 
 def compare_response(result, expected):
