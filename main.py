@@ -6,10 +6,10 @@ import requests as rq
 import json 
 import pickle
 import os
+import sys
 
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
-    
     headers = {
     "Content-Type": "application/json"
     }
@@ -35,9 +35,8 @@ def process_response(response):
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
         source = hit['_source']
-        print("Document ID:", source.get('page_id', 'N/A'))
+        # print("Document ID:", source.get('page_id', 'N/A'))
         # print("text:", source.get('text', 'N/A'))
-        # # print(hit)
         # print("\n\n\n\n")
         index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
     return index
@@ -84,18 +83,24 @@ def compare_response(result, expected):
     return False
 
 def main():
+    
+    
     question_count = 0
     correct = 0
     skiped = 0
-    test_quest = "Gregg Rolie and Rob Tyner, are not a keyboardist."
-    # init log and result files to record
     log = open("log.txt", "w")
     result = open("result.txt", "w")
-    # loop through the dev2hops.json file and get the question
-    dev2hops = open("dev2hops.json", "r")
-    dev2hops_json = json.load(dev2hops)
-    print(len(dev2hops_json))
-    question = test_quest
+    
+    ## -------------- test ----------------
+    if len(sys.argv) > 1:
+        arg_question = sys.argv[1]
+    
+    if(arg_question == "test"):
+        arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+    
+    print(f"Question: {arg_question}")
+    
+    question = arg_question
     index = None
     expected = "supports"
     request, headers, payload = construct_request(question)
@@ -103,14 +108,20 @@ def main():
     index = process_response(response)
     if(index == None):
         #skip this question
-        log.write(f"Index is None for question {question}")
+        log.write(f"error: Index is None for question {question}")
         skiped += 1
     engine = utils.get_sentence_window_query_engine(index)
-    query_answer = engine.query(question + "For this statement give me a true or false answer. and why?")
+    query_answer = engine.query(question + "Is the statement true or false?")
     answer = query_answer.response
     if compare_response(answer, expected):
         correct += 1 
-    log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
+    log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
+    ## -------------- end test ----------------
+            
+    # init log and result files to record
+    # loop through the dev2hops.json file and get the question
+    # dev2hops = open("dev2hops.json", "r")
+    # dev2hops_json = json.load(dev2hops)
     # for statement in dev2hops_json:
     #     index = None
     #     question = statement['claim']
@@ -124,7 +135,7 @@ def main():
     #         skiped += 1
     #         continue
     #     engine = get_sentence_window_query_engine(index)
-    #     answer = engine.query(question + "For this statement give me a true or false answer.")
+    #     answer = engine.query(question + "Is the statement true or false?")
     #     if compare_response(answer, expected):
     #         correct += 1 
     #     #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
