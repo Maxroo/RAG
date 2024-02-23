@@ -110,9 +110,9 @@ def main():
     #     #skip this question
     #     log.write(f"error: Index is None for question {question}")
     #     skiped += 1
-    # engine = utils.get_sentence_window_query_engine(index)
-    # query_answer = engine.query(question + "Is the statement true or false?")
-    # answer = query_answer.response
+    engine = utils.get_sentence_window_query_engine(index)
+    query_answer = engine.query(question + "Is the statement true or false?")
+    answer = query_answer.response
     # if compare_response(answer, expected):
     #     correct += 1 
     # log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
@@ -137,7 +137,8 @@ def main():
             skiped += 1
             continue
         engine = utils.get_sentence_window_query_engine(index)
-        answer = engine.query(question + "Is the statement true or false?")
+        query_answer = engine.query(question + "Is the statement true or false?")
+        answer = query_answer.response
         if compare_response(answer, expected):
             correct += 1 
         log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
