@@ -36,7 +36,7 @@ def process_response(response):
         # Accessing individual fields in each hit
         source = hit['_source']
         print("Document ID:", source.get('page_id', 'N/A'))
-        print("text:", source.get('text', 'N/A'))
+        # print("text:", source.get('text', 'N/A'))
         # # print(hit)
         # print("\n\n\n\n")
         index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
@@ -65,14 +65,14 @@ def index_document(page_id, text):
     if index_file_set == None:
         index_file_set = set()
     if page_id in index_file_set:
-        index = build_sentence_window_index(Documents)
+        index = utils.build_sentence_window_index(Documents)
         return index
     else:
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
         document = Document(text=text)
         Documents = [document] 
-        index = build_sentence_window_index(Documents, insert = True)
+        index = utils.build_sentence_window_index(Documents, insert = True)
         return index
 
 def compare_response(result, expected):
@@ -104,7 +104,7 @@ def main():
         #skip this question
         log.write(f"Index is None for question {question}")
         skiped += 1
-    engine = get_sentence_window_query_engine(index)
+    engine = utils.get_sentence_window_query_engine(index)
     answer = engine.query(question + "For this statement give me a true or false answer. and why?")
     if compare_response(answer, expected):
         correct += 1 
