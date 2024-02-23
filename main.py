@@ -36,10 +36,10 @@ def process_response(response):
         # Accessing individual fields in each hit
         source = hit['_source']
         print("Document ID:", source.get('page_id', 'N/A'))
-        print("opening_text:", source.get('opening_text', 'N/A'))
+        print("text:", source.get('text', 'N/A'))
         # # print(hit)
         # print("\n\n\n\n")
-        #index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
+        index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
     return index
         
 def get_indexed_files():
@@ -100,16 +100,16 @@ def main():
     request, headers, payload = construct_request(question)
     response = rq.get(request, headers=headers, json=payload)   
     index = process_response(response)
-    # if(index == None):
-    #     #skip this question
-    #     log.write(f"Index is None for question {question}")
-    #     skiped += 1
-    #     continue
-    # engine = get_sentence_window_query_engine(index)
-    # answer = engine.query(question + "For this statement give me a true or false answer.")
-    # if compare_response(answer, expected):
-    #     correct += 1 
-        #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
+    if(index == None):
+        #skip this question
+        log.write(f"Index is None for question {question}")
+        skiped += 1
+        continue
+    engine = get_sentence_window_query_engine(index)
+    answer = engine.query(question + "For this statement give me a true or false answer. and why?")
+    if compare_response(answer, expected):
+        correct += 1 
+        log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
     # for statement in dev2hops_json:
     #     index = None
     #     question = statement['claim']
