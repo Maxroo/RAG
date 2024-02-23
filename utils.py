@@ -15,7 +15,7 @@ def get_openai_api_key():
 openai.api_key = get_openai_api_key()
 
 def build_sentence_window_index(
-    document, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
+    documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
     embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
 ):
     # create the sentence window node parser w/ default settings
