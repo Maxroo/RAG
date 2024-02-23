@@ -111,7 +111,7 @@ def main():
     answer = engine.query(question + "For this statement give me a true or false answer. and why?")
     if compare_response(answer, expected):
         correct += 1 
-        log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
+    log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
     # for statement in dev2hops_json:
     #     index = None
     #     question = statement['claim']
