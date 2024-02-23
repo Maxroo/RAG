@@ -123,6 +123,7 @@ def main():
     dev2hops = open("dev2hops.json", "r")
     dev2hops_json = json.load(dev2hops)
     for statement in dev2hops_json:
+        question_timer = time.time()
         question_count += 1
         index = None
         question = statement['claim']
@@ -139,9 +140,9 @@ def main():
         answer = engine.query(question + "Is the statement true or false?")
         if compare_response(answer, expected):
             correct += 1 
-        log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
+        log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
     result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
-    result.write('It took', time.time()-start, 'seconds.')
+    result.write('Took', time.time()-start, 'seconds.')
     log.close()
     result.close()
 
