@@ -64,8 +64,8 @@ def index_document(page_id, text):
     index_file_set = get_indexed_files()
     index_file_set = set() #remove this line
     
-    Documents = [document] 
     document = Document(text=text)
+    Documents = [document] 
     
     if index_file_set == None:
         index_file_set = set()
