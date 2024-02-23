@@ -61,9 +61,7 @@ def check_indexed_files(file_id, indexed_files):
     return false
         
 def index_document(page_id, text):
-    index_file_set = get_indexed_files()
-    index_file_set = set() #remove this line
-    
+    index_file_set = get_indexed_files()    
     document = Document(text=text)
     Documents = [document] 
     
@@ -108,7 +106,8 @@ def main():
         log.write(f"Index is None for question {question}")
         skiped += 1
     engine = utils.get_sentence_window_query_engine(index)
-    answer = engine.query(question + "For this statement give me a true or false answer. and why?")
+    query_answer = engine.query(question + "For this statement give me a true or false answer. and why?")
+    answer = query_answer.response
     if compare_response(answer, expected):
         correct += 1 
     log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
@@ -129,7 +128,7 @@ def main():
     #     if compare_response(answer, expected):
     #         correct += 1 
     #     #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
-    result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
+    # result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
     log.close()
     result.close()
 
