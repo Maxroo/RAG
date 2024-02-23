@@ -104,7 +104,6 @@ def main():
         #skip this question
         log.write(f"Index is None for question {question}")
         skiped += 1
-        continue
     engine = get_sentence_window_query_engine(index)
     answer = engine.query(question + "For this statement give me a true or false answer. and why?")
     if compare_response(answer, expected):
