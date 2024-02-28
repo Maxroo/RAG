@@ -60,7 +60,7 @@ def check_indexed_files(file_id, indexed_files):
         return True
     return false
         
-def index_document(page_id, text):
+def index_document(page_id, text):    
     index_file_set = get_indexed_files()    
     document = Document(text=text)
     Documents = [document] 
@@ -69,12 +69,12 @@ def index_document(page_id, text):
         index_file_set = set()
     if page_id in index_file_set:
         index = utils.build_sentence_window_index(Documents)
-        return index
+        
     else:
         index = utils.build_sentence_window_index(Documents, insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
-        return index
+    return index
 
 def compare_response(result, expected):
     if 'true' in result.lower() and 'supports' in expected.lower():
@@ -88,6 +88,10 @@ def main():
     question_count = 0
     correct = 0
     skiped = 0
+    read_index_set_time = 0
+    index_time = 0
+    inference_time = 0
+    open('time.txt', 'w').close()
     open('log.txt', 'w').close()
     # if len(sys.argv) > 1:
     #     option = sys.argv[1]
@@ -130,27 +134,41 @@ def main():
         expected = statement['label']
         request, headers, payload = construct_request(question)
         response = rq.get(request, headers=headers, json=payload)   
+        
+        timer = time.time()
         index = process_response(response)
+        with open("time.txt", "a") as log:
+            log.write(f"Indexing took {time.time()-timer} seconds\n")
         if(index == None):
             #skip this question
-            
             log = open("log.txt", "a")
             log.write(f"Index is None for question {question}")
             log.close()
             skiped += 1
             continue
+        timer = time.time()
         engine = utils.get_sentence_window_query_engine(index)
+        with open("time.txt", "a") as log:
+            log.write(f"Getting engine took {time.time()-timer} seconds\n")
+        
+        timer = time.time()
         query_answer = engine.query(question + "Is the statement true or false?")
+        with open("timer.txt", "a") as log:
+            log.write(f"Querying took {time.time()-timer} seconds\n")
+            log.write(f"Total time for question {question} is {time.time()-question_timer} seconds\n")
+            log.write(f"-----------------------------------------------------------")
+        
         answer = query_answer.response
         if compare_response(answer, expected):
             correct += 1
+
         log = open("log.txt", "a") 
         log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
         log.close()
-    result = open("result.txt", "w")
-    result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
-    result.write('Took', time.time()-start, 'seconds.')
-    result.close()
+        result = open("result.txt", "w")
+        result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
+        result.write('Took', time.time()-start, 'seconds.')
+        result.close()
 
 if __name__ == "__main__":
     main()
