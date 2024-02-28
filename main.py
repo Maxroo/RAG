@@ -79,6 +79,7 @@ def index_document(page_id, text):
     if page_id in index_file_set:
         index = utils.build_sentence_window_index(Documents)
     else:
+        global is_insert 
         is_insert = True
         index = utils.build_sentence_window_index(Documents, insert = True)
         index_file_set.add(page_id)
@@ -93,6 +94,10 @@ def compare_response(result, expected):
     return False
 
 def main():
+    
+    global is_insert 
+    global mode
+    
     start = time.time()
     question_count = 0
     correct = 0
@@ -100,7 +105,6 @@ def main():
     read_index_set_time = 0
     index_time = 0
     inference_time = 0
-    
     if len(sys.argv) > 2:
         mode = sys.argv[1]
     ## -------------- test ----------------
