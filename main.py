@@ -33,7 +33,10 @@ def construct_request(question):
 
 # loop through the json file from response and get each field
 def process_response(response):
+    timer = time.time()
     json_response = response.json()
+    with open("time.txt", "a") as log:
+        log.write(f"elastic search took {time.time()-timer} seconds\n")
     index = None
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
@@ -86,6 +89,9 @@ def compare_response(result, expected):
     return False
 
 def main():
+    
+    mode = ''
+    
     start = time.time()
     question_count = 0
     correct = 0
@@ -93,85 +99,92 @@ def main():
     read_index_set_time = 0
     index_time = 0
     inference_time = 0
-    open('time.txt', 'w').close()
-    open('log.txt', 'w').close()
-    # if len(sys.argv) > 1:
-    #     option = sys.argv[1]
-    #     if(option == "new"):
-    #         open('log.txt', 'w').close()
+    
+    if len(sys.argv) > 2:
+        mode = sys.argv[1]
     ## -------------- test ----------------
-    
-    # if(arg_question == "test"):
-    #     arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
-    
-    # print(f"Question: {arg_question}")
-    
-    # question = arg_question
-    # index = None
-    # expected = "supports"
-    # request, headers, payload = construct_request(question)
-    # response = rq.get(request, headers=headers, json=payload)   
-    # index = process_response(response)
-    # if(index == None):
-    #     #skip this question
-    #     log.write(f"error: Index is None for question {question}")
-    #     skiped += 1
-    # engine = utils.get_sentence_window_query_engine(index)
-    # query_answer = engine.query(question + "Is the statement true or false?")
-    # answer = query_answer.response
-    # if compare_response(answer, expected):
-    #     correct += 1 
-    # log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
+    if(mode == '-q'):
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        index = None
+        expected = "supports"
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)   
+        timer = time.time()
+        index = process_response(response)
+        print(f"Indexing took {time.time()-timer} seconds, Insert: {is_insert}")
+        if(index == None):
+            #skip this question
+            print(f"error: Index is None for question {question}")
+            skiped += 1
+            return 
+        timer = time.time()
+        engine = utils.get_sentence_window_query_engine(index)
+        print(f"Getting engine took {time.time()-timer} seconds")
+        timer = time.time()
+        query_answer = engine.query(question + "Is the statement true or false?")
+        print (f"Querying took {time.time()-timer} seconds")
+        answer = query_answer.response
+        if compare_response(answer, expected):
+            correct += 1 
+        print(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
     ## -------------- end test ----------------
             
     #init log and result files to record
     #loop through the dev2hops.json file and get the question
-    dev2hops = open("dev2hops.json", "r")
-    dev2hops_json = json.load(dev2hops)
-    for statement in dev2hops_json:
-        is_insert = False
-        question_timer = time.time()
-        question_count += 1
-        index = None
-        question = statement['claim']
-        expected = statement['label']
-        request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload)   
-        
-        timer = time.time()
-        index = process_response(response)
-        with open("time.txt", "a") as log:
-            log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert}\n")
-        if(index == None):
-            #skip this question
-            log = open("log.txt", "a")
-            log.write(f"Index is None for question {question}")
-            log.close()
-            skiped += 1
-            continue
-        timer = time.time()
-        engine = utils.get_sentence_window_query_engine(index)
-        with open("time.txt", "a") as log:
-            log.write(f"Getting engine took {time.time()-timer} seconds\n")
-        
-        timer = time.time()
-        query_answer = engine.query(question + "Is the statement true or false?")
-        with open("timer.txt", "a") as log:
-            log.write(f"Querying took {time.time()-timer} seconds\n")
-            log.write(f"Total time for question {question} is {time.time()-question_timer} seconds\n")
-            log.write(f"-----------------------------------------------------------")
-        
-        answer = query_answer.response
-        if compare_response(answer, expected):
-            correct += 1
+    elif mode == '-f':
+        file_path = sys.argv[2]
+        with open(file_path, "r") as file:
+            for statement in file:
+                is_insert = False
+                question_timer = time.time()
+                question_count += 1
+                index = None
+                question = statement['claim']
+                expected = statement['label']
+                request, headers, payload = construct_request(question)
+                response = rq.get(request, headers=headers, json=payload)   
+                
+                timer = time.time()
+                index = process_response(response)
+                with open("time.txt", "a") as log:
+                    log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert}\n")
+                if(index == None):
+                    #skip this question
+                    log = open("log.txt", "a")
+                    log.write(f"Index is None for question {question}")
+                    log.close()
+                    skiped += 1
+                    continue
+                timer = time.time()
+                engine = utils.get_sentence_window_query_engine(index)
+                with open("time.txt", "a") as log:
+                    log.write(f"Getting engine took {time.time()-timer} seconds\n")
+                
+                timer = time.time()
+                query_answer = engine.query(question + "Is the statement true or false?")
+                with open("timer.txt", "a") as log:
+                    log.write(f"Querying took {time.time()-timer} seconds\n")
+                    log.write(f"Total time for question {question} is {time.time()-question_timer} seconds\n")
+                    log.write(f"-----------------------------------------------------------")
+                
+                answer = query_answer.response
+                if compare_response(answer, expected):
+                    correct += 1
 
-        log = open("log.txt", "a") 
-        log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
-        log.close()
-        result = open("result.txt", "w")
-        result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
-        result.write('Took', time.time()-start, 'seconds.')
-        result.close()
+                log = open("log.txt", "a") 
+                log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
+                log.close()
+                result = open("result.txt", "w")
+                result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
+                result.write('Total time : ', time.time()-start, 'seconds.')
+                result.close()
+    else:
+        print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
+        return        
 
 if __name__ == "__main__":
     main()
