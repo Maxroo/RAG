@@ -10,6 +10,7 @@ import sys
 import time
 
 is_insert = False
+mode = ''
 
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -35,8 +36,11 @@ def construct_request(question):
 def process_response(response):
     timer = time.time()
     json_response = response.json()
-    with open("time.txt", "a") as log:
-        log.write(f"elastic search took {time.time()-timer} seconds\n")
+    if mode == '-f':
+        with open("time.txt", "a") as log:
+            log.write(f"elastic search took {time.time()-timer} seconds |", end = '')
+    else: 
+        print(f"elastic search took {time.time()-timer} seconds")
     index = None
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
@@ -89,9 +93,6 @@ def compare_response(result, expected):
     return False
 
 def main():
-    
-    mode = ''
-    
     start = time.time()
     question_count = 0
     correct = 0
@@ -115,7 +116,7 @@ def main():
         response = rq.get(request, headers=headers, json=payload)   
         timer = time.time()
         index = process_response(response)
-        print(f"Indexing took {time.time()-timer} seconds, Insert: {is_insert}")
+        print(f"Indexing took {time.time()-timer} seconds, Insert: {is_insert}" )
         if(index == None):
             #skip this question
             print(f"error: Index is None for question {question}")
@@ -151,7 +152,7 @@ def main():
                 timer = time.time()
                 index = process_response(response)
                 with open("time.txt", "a") as log:
-                    log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert}\n")
+                    log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert} | " , end = '')
                 if(index == None):
                     #skip this question
                     log = open("log.txt", "a")
@@ -162,12 +163,12 @@ def main():
                 timer = time.time()
                 engine = utils.get_sentence_window_query_engine(index)
                 with open("time.txt", "a") as log:
-                    log.write(f"Getting engine took {time.time()-timer} seconds\n")
+                    log.write(f"Getting engine took {time.time()-timer} seconds | ", end = '')
                 
                 timer = time.time()
                 query_answer = engine.query(question + "Is the statement true or false?")
                 with open("timer.txt", "a") as log:
-                    log.write(f"Querying took {time.time()-timer} seconds\n")
+                    log.write(f"Querying took {time.time()-timer} seconds | ", end = '')
                     log.write(f"Total time for question {question} is {time.time()-question_timer} seconds\n")
                     log.write(f"-----------------------------------------------------------")
                 
