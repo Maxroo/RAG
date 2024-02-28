@@ -9,6 +9,8 @@ import os
 import sys
 import time
 
+is_insert = False
+
 def construct_request(question):
     request = "http://localhost:9200/enwiki/_search?pretty"
     headers = {
@@ -69,8 +71,8 @@ def index_document(page_id, text):
         index_file_set = set()
     if page_id in index_file_set:
         index = utils.build_sentence_window_index(Documents)
-        
     else:
+        is_insert = True
         index = utils.build_sentence_window_index(Documents, insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
@@ -127,6 +129,7 @@ def main():
     dev2hops = open("dev2hops.json", "r")
     dev2hops_json = json.load(dev2hops)
     for statement in dev2hops_json:
+        is_insert = False
         question_timer = time.time()
         question_count += 1
         index = None
@@ -138,7 +141,7 @@ def main():
         timer = time.time()
         index = process_response(response)
         with open("time.txt", "a") as log:
-            log.write(f"Indexing took {time.time()-timer} seconds\n")
+            log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert}\n")
         if(index == None):
             #skip this question
             log = open("log.txt", "a")
