@@ -203,7 +203,10 @@ def main():
         for hit in json_response['hits']['hits']:
             source = hit['_source']
             texts.append(source.get('text', 'N/A'))
-        utils.openai_query(question + " . Is the statement true or false?", texts)
+        timer = time.time()
+        answer = utils.openai_query(question + " . Is the statement true or false?", texts)
+        print (f"Querying took {time.time()-timer} seconds")
+        print(f"Questions: {question} | Answer: {answer}\n")
         
     
     else:

@@ -43,6 +43,8 @@ def openai_query(question, documents):
         presence_penalty=0,
         stop=None
     )
+    print(f"Prompt: {prompt}") # for debugging
+    print(f"Response: {res.choices[0].text}") # for debugging
     return res.choices[0].text
 
 def build_sentence_window_index(
