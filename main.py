@@ -163,7 +163,7 @@ def main():
                 question_timer = time.time()
                 question_count += 1
                 print(statement)
-                print(statement["claim"])
+                # print(statement["claim"])
                 return 
                 # question = statement['claim']
                 # expected = statement['label']
