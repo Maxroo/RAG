@@ -13,7 +13,7 @@ def get_openai_api_key():
     return os.getenv("OPENAI_API_KEY")
 
 openai.api_key = get_openai_api_key()
-openai_client = OpenAI(api_key=get_openai_api_key())
+openai_client = openai.OpenAI(api_key=get_openai_api_key())
 
 def construct_prompt(question, documents):
     prompt_start = (
@@ -33,7 +33,7 @@ def construct_prompt(question, documents):
 
 def openai_query(question, documents):
     prompt = construct_prompt(question, documents)
-    res = openai_client.Completion.create(
+    res = openai_client.completions.create(
         model="gpt-3.5-turbo-instruct",
         prompt=prompt,
         temperature=0,
