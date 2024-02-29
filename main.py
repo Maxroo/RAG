@@ -93,7 +93,7 @@ def compare_response(result, expected):
         return True
     return False
 
-def process_response_no_index(response):
+def get_response_no_index(question,response):
     json_response = response.json()
     texts = []
     for hit in json_response['hits']['hits']:
@@ -168,8 +168,7 @@ def main():
                 response = rq.get(request, headers=headers, json=payload)   
                 
                 timer = time.time()
-                answer, token_usage = process_response_no_index(response)
-                
+                answer, token_usage = get_response_no_index(question ,response)
                 question_count += 1
                 if compare_response(answer, expected):
                     correct += 1        
