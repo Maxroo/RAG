@@ -162,21 +162,22 @@ def main():
                 
                 question_timer = time.time()
                 question_count += 1
-                
+                print(statement)
                 question = statement['claim']
                 expected = statement['label']
-                request, headers, payload = construct_request(question)
-                response = rq.get(request, headers=headers, json=payload)   
                 
-                timer = time.time()
-                answer, token_usage = process_response_no_index(response)
-                if compare_response(answer, expected):
-                    correct += 1        
-                with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - timer}\n")
-                with open("result.txt", "w") as result:
-                    result.write(f"total question: {question_count} | corrects: {correct} | accuarcy {correct/question * 100}%\n took {time.time() - start}")
-                    result.write(f"\nToken_usage: {token_usage}\n")
+                # request, headers, payload = construct_request(question)
+                # response = rq.get(request, headers=headers, json=payload)   
+                
+                # timer = time.time()
+                # answer, token_usage = process_response_no_index(response)
+                # if compare_response(answer, expected):
+                #     correct += 1        
+                # with open("log.txt", "a") as log:
+                #     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - timer}\n")
+                # with open("result.txt", "w") as result:
+                #     result.write(f"total question: {question_count} | corrects: {correct} | accuarcy {correct/question * 100}%\n took {time.time() - start}")
+                #     result.write(f"\nToken_usage: {token_usage}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
