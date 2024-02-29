@@ -160,7 +160,6 @@ def main():
         with open(file_path, "r") as file:
             file = json.load(file)
             for statement in file:
-                statement = json.loads(statement)
                 question_timer = time.time()
                 question_count += 1
                 print(statement)
