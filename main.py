@@ -101,7 +101,7 @@ def get_response_no_index(question,response):
         texts.append(source.get('text', 'N/A'))
     res = utils.openai_query(question + " . Is the statement true or false?", texts)
     answer = res.choices[0].text
-    token_usage = res.usage[0].total_tokens
+    token_usage = res.usage.total_tokens
     return answer, token_usage
 
 def main():
