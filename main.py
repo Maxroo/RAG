@@ -158,12 +158,13 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
+            file = json.load(file)
             for statement in file:
-                
+                statement = json.loads(statement)
                 question_timer = time.time()
                 question_count += 1
                 print(statement)
-                # print(statement["claim"])
+                print(statement["claim"])
                 return 
                 # question = statement['claim']
                 # expected = statement['label']
