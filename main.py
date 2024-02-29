@@ -93,6 +93,17 @@ def compare_response(result, expected):
         return True
     return False
 
+def process_response_no_index(response):
+    json_response = response.json()
+    texts = []
+    for hit in json_response['hits']['hits']:
+        source = hit['_source']
+        texts.append(source.get('text', 'N/A'))
+    res = utils.openai_query(question + " . Is the statement true or false?", texts)
+    answer = res.choices[0].text
+    token_usage = res.usage[0].total_tokens
+    return answer, token_usage
+
 def main():
     
     global is_insert 
@@ -141,53 +152,31 @@ def main():
     #init log and result files to record
     #loop through the dev2hops.json file and get the question
     elif mode == '-f':
+        with open("log.txt", "w"):
+            pass
+        with open("result.txt", "w"):
+            pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
             for statement in file:
-                is_insert = False
+                
                 question_timer = time.time()
                 question_count += 1
-                index = None
+                
                 question = statement['claim']
                 expected = statement['label']
                 request, headers, payload = construct_request(question)
                 response = rq.get(request, headers=headers, json=payload)   
                 
                 timer = time.time()
-                index = process_response(response)
-                with open("time.txt", "a") as log:
-                    log.write(f"Indexing took {time.time()-timer} seconds, Insert = {is_insert} | " , end = '')
-                if(index == None):
-                    #skip this question
-                    log = open("log.txt", "a")
-                    log.write(f"Index is None for question {question}")
-                    log.close()
-                    skiped += 1
-                    continue
-                timer = time.time()
-                engine = utils.get_sentence_window_query_engine(index)
-                with open("time.txt", "a") as log:
-                    log.write(f"Getting engine took {time.time()-timer} seconds | ", end = '')
-                
-                timer = time.time()
-                query_answer = engine.query(question + "Is the statement true or false?")
-                with open("timer.txt", "a") as log:
-                    log.write(f"Querying took {time.time()-timer} seconds | ", end = '')
-                    log.write(f"Total time for question {question} is {time.time()-question_timer} seconds\n")
-                    log.write(f"-----------------------------------------------------------")
-                
-                answer = query_answer.response
+                answer, token_usage = process_response_no_index(response)
                 if compare_response(answer, expected):
-                    correct += 1
-
-                log = open("log.txt", "a") 
-                log.write(f"Questions: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time()- question_timer} seconds \n")
-                log.close()
-                result = open("result.txt", "w")
-                result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
-                result.write('Total time : ', time.time()-start, 'seconds.')
-                result.close()
-    
+                    correct += 1        
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - timer}\n")
+                with open("result.txt", "w") as result:
+                    result.write(f"total question: {question_count} | corrects: {correct} | accuarcy {correct/question * 100}%\n took {time.time() - start}")
+                    result.write(f"\nToken_usage: {token_usage}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
