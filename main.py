@@ -163,8 +163,8 @@ def main():
                 question_timer = time.time()
                 question_count += 1
                 print(statement)
-                question = statement['claim']
-                expected = statement['label']
+                # question = statement['claim']
+                # expected = statement['label']
                 
                 # request, headers, payload = construct_request(question)
                 # response = rq.get(request, headers=headers, json=payload)   
