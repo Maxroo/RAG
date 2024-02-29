@@ -33,7 +33,7 @@ def construct_prompt(question, documents):
 
 def openai_query(question, documents):
     prompt = construct_prompt(question, documents)
-    res = openai_client.completions.create(
+    res = openai_client.Completion.create(
         model="gpt-3.5-turbo-instruct",
         prompt=prompt,
         temperature=0,
