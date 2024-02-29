@@ -187,13 +187,8 @@ def main():
         request, headers, payload = construct_request(question)
         response = rq.get(request, headers=headers, json=payload)   
         timer = time.time()
-        json_response = response.json()
-        texts = []
-        for hit in json_response['hits']['hits']:
-            source = hit['_source']
-            texts.append(source.get('text', 'N/A'))
-        timer = time.time()
-        answer = utils.openai_query(question + " . Is the statement true or false?", texts)
+        answer, token_usage = get_response_no_index(question ,response)
+        print(f"token usage: {token_usage}")
         print (f"Querying took {time.time()-timer} seconds")
         print(f"Questions: {question} | Answer: {answer}\n")
         
