@@ -187,6 +187,25 @@ def main():
                 result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
                 result.write('Total time : ', time.time()-start, 'seconds.')
                 result.close()
+    
+    elif mode == '-m':
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        index = None
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)   
+        timer = time.time()
+        json_response = response.json()
+        texts = []
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            texts.append(source.get('text', 'N/A'))
+        utils.openai_query(question + " . Is the statement true or false?", texts)
+        
+    
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        

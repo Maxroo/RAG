@@ -13,6 +13,37 @@ def get_openai_api_key():
     return os.getenv("OPENAI_API_KEY")
 
 openai.api_key = get_openai_api_key()
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
+
+def construct_prompt(question, documents):
+    prompt_start = (
+    "Answer the question based on the context below.\n\n"+
+    "Context:\n"
+    )
+
+    prompt_end = (
+        f"\n\nQuestion: {question}\nAnswer:"
+    )
+
+    prompt = (
+        prompt_start + "\n\n---\n\n".join(documents) + 
+        prompt_end
+    )
+    return prompt
+
+def openai_query(question, documents):
+    prompt = construct_prompt(question, documents)
+    res = openai_client.completions.create(
+        model="gpt-3.5-turbo",
+        prompt=prompt,
+        temperature=0,
+        max_tokens=636,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None
+    )
+    return res.choices[0].text
 
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
