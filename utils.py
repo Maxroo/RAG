@@ -34,7 +34,7 @@ def construct_prompt(question, documents):
 def openai_query(question, documents):
     prompt = construct_prompt(question, documents)
     res = openai_client.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-3.5-turbo-instruct",
         prompt=prompt,
         temperature=0,
         max_tokens=636,
@@ -44,7 +44,7 @@ def openai_query(question, documents):
         stop=None
     )
     print(f"Prompt: {prompt}") # for debugging
-    print(f"Response: {res.choices[0].text}") # for debugging
+    print(f"Response: {res}") # for debugging
     return res.choices[0].text
 
 def build_sentence_window_index(
