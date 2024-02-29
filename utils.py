@@ -13,7 +13,7 @@ def get_openai_api_key():
     return os.getenv("OPENAI_API_KEY")
 
 openai.api_key = get_openai_api_key()
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+openai_client = OpenAI(api_key=get_openai_api_key())
 
 def construct_prompt(question, documents):
     prompt_start = (
