@@ -211,13 +211,16 @@ def main():
             arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
         print(f"Question: {arg_question}")
         question = arg_question
-        index = None
-        request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload)   
         timer = time.time()
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)  
+        texts = get_texts_from_response(response)
+        context = semintic_search(question, texts)
+        semintic_search_time = time.time()-timer
+        answer, token_usage = send_to_openai(question, context) 
         answer, token_usage = get_response_no_index(question ,response)
         print(f"token usage: {token_usage}")
-        print (f"Querying took {time.time()-timer} seconds")
+        print (f"question took {time.time()-timer} seconds")
         print(f"Questions: {question} | Answer: {answer}\n")
         
     elif mode == '-s':
