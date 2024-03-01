@@ -129,16 +129,13 @@ def retrieve_context_from_texts(texts, question, top_x = 10):
     #     top_x = len(sorted_indices)
     # relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
     # return relevant_context
-    
+    query = [question] * len(flat_text_sentences)
     reranker = FlagReranker('./bge-reranker-base/', use_fp16=True)
-    
-    scores = reranker(question, flat_text_sentences)
-    ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i]['score'], reverse=True)
+    score = reranker.compute_score([query, flat_text_sentences])
+    print(score)
+    # scores = reranker(question, flat_text_sentences )
+    ranked_indices = sorted(range(len(score)), key=lambda i: score[i], reverse=True)
     ranked_passages = [flat_text_sentences[i] for i in ranked_indices]
     if len(ranked_passages) < top_x:
         top_x = len(ranked_passages)
     return ranked_passages[:top_x]
-
-text = ['what is panda?', 'doggg', 'The giant panda (Ailuropoda melanoleuca), sometimes called a panda bear or simply panda, is a bear species endemic to China.']
-question = 'what is panda?'
-print(retrieve_context_from_texts(text, question))
