@@ -227,7 +227,7 @@ def main():
             arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
         print(f"Question: {arg_question}")
         question = arg_question
-        request, headers, payload = construct_request(question)
+        request, headers, payload = construct_request(question, 3)
         response = rq.get(request, headers=headers, json=payload)   
         timer = time.time()
         texts = get_texts_from_response(response)
