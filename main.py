@@ -234,6 +234,22 @@ def main():
         relevant_context = semintic_search(question, texts)
         print(f"Semintic search took {time.time()-timer} seconds")
         print(f"Relevant context: {relevant_context}")
+        
+    elif mode == '-e':
+        print("Test Elastic search")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)
+        json_response = response.json()
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            print("title:", source.get('title', 'N/A'))
+            print("text:", source.get('text', 'N/A'))
+            print("\n\n")
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        
