@@ -105,17 +105,27 @@ from nltk.tokenize import sent_tokenize
 import numpy as np
 from FlagEmbedding import FlagReranker
 
-def chunk_text(text, chunk_size):
-    chunks = []
-    words = text.split()
-    for i in range(0, len(words), chunk_size):
-        chunks.append(" ".join(words[i:i+chunk_size]))
-    return chunks
+def custom_sent_tokenize(text, max_token_length=128):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    token_length = 0
+    result = []
+    current_sentence = ""
+    for sentence in sentences:
+        if token_length + len(sentence.split()) <= max_token_length:
+            current_sentence += sentence
+            token_length += len(sentence.split())
+        else:
+            result.append(current_sentence.strip())
+            current_sentence = sentence
+            token_length = len(sentence.split())
+    if current_sentence:
+        result.append(current_sentence.strip())
+    return result
 
 def retrieve_context_from_texts(texts, question, top_x = 3):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
-    text_sentences = [chunk_text(text, 256) for text in texts]
+    text_sentences = [custom_sent_tokenize(text, 128) for text in texts]
     print(text_sentences)
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
