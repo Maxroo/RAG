@@ -130,6 +130,7 @@ def retrieve_context_from_texts(texts, question, top_x = 10):
     # relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
     # return relevant_context
     query = [question] * len(flat_text_sentences)
+    print(len(query), len(flat_text_sentences))
     reranker = FlagReranker('./bge-reranker-base/', use_fp16=True)
     score = reranker.compute_score([query, flat_text_sentences])
     print(score)
