@@ -123,10 +123,6 @@ def retrieve_context_from_texts(texts, question):
     sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
 
     # Retrieve top-ranked sentences
-    top_x = 6
-    if len(sorted_indices) < top_x:
-        top_x = len(sorted_indices)
-    print(sorted_indices)
-    relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
+    relevant_context = [flat_text_sentences[i] for i in sorted_indices[:6]] 
 
     return relevant_context
