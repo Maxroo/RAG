@@ -103,7 +103,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize
 import numpy as np
 
-def retrieve_context_from_texts(texts, question):
+def retrieve_context_from_texts(texts, question, top_x = 10):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
     text_sentences = [sent_tokenize(text) for text in texts]
@@ -116,16 +116,23 @@ def retrieve_context_from_texts(texts, question):
     tfidf_matrix = vectorizer.fit_transform(question_sentences + flat_text_sentences)
 
     # Compute cosine similarity between question and text sentences
-    similarity_matrix = cosine_similarity(tfidf_matrix)
-
-    # Sort sentences by similarity to question
-    num_question_sentences = len(question_sentences)
-    sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
+    # similarity_matrix = cosine_similarity(tfidf_matrix)
+    reranker = FlagReranker('BAAI/bge-reranker-base', use_fp16=True)
+    scores = reranker(question, flat_text_sentences)
+    ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i]['score'], reverse=True)
+    ranked_passages = [flat_text_sentences[i] for i in ranked_indices]
+    if len(ranked_passages) < top_x:
+        top_x = len(ranked_passages)
+    return ranked_passages[:top_x]
+    
+    # # Sort sentences by similarity to question
+    # num_question_sentences = len(question_sentences)
+    # sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
 
     # Retrieve top-ranked sentences
-    top_x = 10
-    if len(sorted_indices) < top_x:
-        top_x = len(sorted_indices)
-    relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
+    # top_x = 10
+    # if len(sorted_indices) < top_x:
+    #     top_x = len(sorted_indices)
+    # relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
 
     return relevant_context
