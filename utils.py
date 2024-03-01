@@ -112,10 +112,10 @@ def chunk_text(text, chunk_size):
         chunks.append(" ".join(words[i:i+chunk_size]))
     return chunks
 
-def retrieve_context_from_texts(texts, question, top_x = 10):
+def retrieve_context_from_texts(texts, question, top_x = 3):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
-    text_sentences = [chunk_text(text, 512) for text in texts]
+    text_sentences = [chunk_text(text, 256) for text in texts]
     print(text_sentences)
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
@@ -130,7 +130,6 @@ def retrieve_context_from_texts(texts, question, top_x = 10):
     sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
 
     # Retrieve top-ranked sentences
-    top_x = 10
     if len(sorted_indices) < top_x:
         top_x = len(sorted_indices)
     relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
