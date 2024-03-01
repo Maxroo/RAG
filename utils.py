@@ -109,34 +109,34 @@ def retrieve_context_from_texts(texts, question, top_x = 10):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
     text_sentences = [sent_tokenize(text) for text in texts]
-
+    print(text_sentences)
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
-
     # Compute TF-IDF vectors for question and text sentences
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(question_sentences + flat_text_sentences)
 
     # Compute cosine similarity between question and text sentences
-    # similarity_matrix = cosine_similarity(tfidf_matrix)
-    # # Sort sentences by similarity to question
-    # num_question_sentences = len(question_sentences)
-    # sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+    # Sort sentences by similarity to question
+    num_question_sentences = len(question_sentences)
+    sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
 
     # Retrieve top-ranked sentences
-    # top_x = 10
-    # if len(sorted_indices) < top_x:
-    #     top_x = len(sorted_indices)
-    # relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
-    # return relevant_context
-    query = [question] * len(flat_text_sentences)
-    print(len(query), len(flat_text_sentences))
-    reranker = FlagReranker('./bge-reranker-base/', use_fp16=True)
-    score = reranker.compute_score([query, flat_text_sentences])
-    print(score)
-    # scores = reranker(question, flat_text_sentences )
-    ranked_indices = sorted(range(len(score)), key=lambda i: score[i], reverse=True)
-    ranked_passages = [flat_text_sentences[i] for i in ranked_indices]
-    if len(ranked_passages) < top_x:
-        top_x = len(ranked_passages)
-    return ranked_passages[:top_x]
+    top_x = 10
+    if len(sorted_indices) < top_x:
+        top_x = len(sorted_indices)
+    relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
+    return relevant_context
+    # query = [question] * len(flat_text_sentences)
+    # print(qu/ery)
+    # print(flat_text_sentences)
+    # reranker = FlagReranker('BAAI/bge-reranker-base', use_fp16=True)
+    # score = reranker.compute_score([[question, 'where is that'], flat_text_sentences])
+    # print(score)
+    # # scores = reranker(question, flat_text_sentences )
+    # ranked_indices = sorted(range(len(score)), key=lambda i: score[i], reverse=True)
+    # ranked_passages = [flat_text_sentences[i] for i in ranked_indices]
+    # if len(ranked_passages) < top_x:
+    #     top_x = len(ranked_passages)
+    # return ranked_passages[:top_x]
