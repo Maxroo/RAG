@@ -115,7 +115,7 @@ def chunk_text(text, chunk_size):
 def retrieve_context_from_texts(texts, question, top_x = 10):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
-    text_sentences = [chunk_text(text, 1024) for text in texts]
+    text_sentences = [chunk_text(text, 512) for text in texts]
     print(text_sentences)
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]

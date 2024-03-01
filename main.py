@@ -233,7 +233,9 @@ def main():
         texts = get_texts_from_response(response)
         relevant_context = semintic_search(question, texts)
         print(f"Semintic search took {time.time()-timer} seconds")
-        print(f"Relevant context: {relevant_context}")
+        print(f"Relevant context:")
+        for text in relevant_context:
+            print(f"Text: {text}")
         
     elif mode == '-e':
         print("Test Elastic search")
