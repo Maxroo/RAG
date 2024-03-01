@@ -104,6 +104,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize
 import numpy as np
 from FlagEmbedding import FlagReranker
+import re 
 
 def custom_sent_tokenize(text, max_token_length=128):
     sentences = re.split(r'(?<=[.!?])\s+', text)
