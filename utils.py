@@ -119,7 +119,8 @@ def retrieve_context_from_texts(texts, question):
     similarity_matrix = cosine_similarity(tfidf_matrix)
 
     # Sort sentences by similarity to question
-    sorted_indices = np.argsort(similarity_matrix[0])[::-1]
+    num_question_sentences = len(question_sentences)
+    sorted_indices = np.argsort(similarity_matrix[:num_question_sentences, num_question_sentences:])[0][::-1]
 
     # Retrieve top-ranked sentences
     top_x = 6
