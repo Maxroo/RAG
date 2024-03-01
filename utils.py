@@ -96,3 +96,32 @@ def get_sentence_window_query_engine(
         similarity_top_k=similarity_top_k, node_postprocessors=[postproc, rerank]
     )
     return sentence_window_engine
+
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.tokenize import sent_tokenize
+import numpy as np
+
+def retrieve_context_from_texts(texts, question):
+    # Tokenize question and texts into sentences
+    question_sentences = sent_tokenize(question)
+    text_sentences = [sent_tokenize(text) for text in texts]
+
+    # Flatten list of text sentences
+    flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
+
+    # Compute TF-IDF vectors for question and text sentences
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(question_sentences + flat_text_sentences)
+
+    # Compute cosine similarity between question and text sentences
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+
+    # Sort sentences by similarity to question
+    sorted_indices = np.argsort(similarity_matrix[0])[::-1]
+
+    # Retrieve top-ranked sentences
+    relevant_context = [flat_text_sentences[i] for i in sorted_indices[:5]]  # Change 5 to desired number of passages
+
+    return relevant_context

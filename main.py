@@ -191,10 +191,28 @@ def main():
         print(f"token usage: {token_usage}")
         print (f"Querying took {time.time()-timer} seconds")
         print(f"Questions: {question} | Answer: {answer}\n")
-        
     
     else:
-        print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
+        
+        arg_question = sys.argv[1]
+        if arg_question == "":
+            print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
+            return
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        index = None
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)
+        json_response = response.json()
+        texts = []
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            texts.append(source.get('text', 'N/A'))
+        relevant_context = utils.retrieve_context_from_texts(texts, question)
+        for sentence in relevant_context:
+            print(sentence)
         return        
 
 if __name__ == "__main__":
