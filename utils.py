@@ -125,6 +125,7 @@ def retrieve_context_from_texts(texts, question):
     top_x = 6
     if len(sorted_indices) < top_x:
         top_x = len(sorted_indices)
+    print(sorted_indices)
     relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
 
     return relevant_context
