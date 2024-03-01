@@ -104,6 +104,25 @@ def get_response_no_index(question,response):
     token_usage = res.usage.total_tokens
     return answer, token_usage
 
+def get_texts_from_response(response):
+    json_response = response.json()
+    texts = []
+    for hit in json_response['hits']['hits']:
+        source = hit['_source']
+        texts.append(source.get('text', 'N/A'))
+    return texts
+
+def semintic_search(question, texts):
+        # print(f"Question: {arg_question}")
+        relevant_context = utils.retrieve_context_from_texts(texts, question)
+        return relevant_context
+            
+def send_to_openai(question, texts):
+    res = utils.openai_query(question + " . Is the statement true or false?", texts)
+    answer = res.choices[0].text
+    token_usage = res.usage.total_tokens
+    return answer, token_usage
+
 def main():
     
     global is_insert 
@@ -157,6 +176,7 @@ def main():
         with open("result.txt", "w"):
             pass
         file_path = sys.argv[2]
+        
         with open(file_path, "r") as file:
             file = json.load(file)
             for statement in file:
@@ -168,12 +188,19 @@ def main():
                 response = rq.get(request, headers=headers, json=payload)   
                 
                 timer = time.time()
-                answer, token_usage = get_response_no_index(question ,response)
+                # answer, token_usage = get_response_no_index(question ,response)
+                texts = get_texts_from_response(response)
+                context = semintic_search(question, texts)
+                semintic_search_time = time.time()-timer
+                timer = time.time()
+                answer, token_usage = send_to_openai(question, context)
+                openai_time = time.time()-timer
                 question_count += 1
                 if compare_response(answer, expected):
                     correct += 1        
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - timer}\n")
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer}")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
                 with open("result.txt", "w") as result:
                     result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n took {time.time() - start}")
                     result.write(f"\nToken_usage: {token_usage}\n")
@@ -191,28 +218,23 @@ def main():
         print(f"token usage: {token_usage}")
         print (f"Querying took {time.time()-timer} seconds")
         print(f"Questions: {question} | Answer: {answer}\n")
-    
-    else:
         
-        arg_question = sys.argv[1]
-        if arg_question == "":
-            print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
-            return
+    elif mode == '-s':
+        print("Test Semintic search")
+        arg_question = sys.argv[2]
         if(arg_question == "test"):
             arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
         print(f"Question: {arg_question}")
         question = arg_question
-        index = None
         request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload)
-        json_response = response.json()
-        texts = []
-        for hit in json_response['hits']['hits']:
-            source = hit['_source']
-            texts.append(source.get('text', 'N/A'))
-        relevant_context = utils.retrieve_context_from_texts(texts, question)
-        for sentence in relevant_context:
-            print(sentence)
+        response = rq.get(request, headers=headers, json=payload)   
+        timer = time.time()
+        texts = get_texts_from_response(response)
+        relevant_context = semintic_search(question, texts)
+        print(f"Semintic search took {time.time()-timer} seconds")
+        print(f"Relevant context: {relevant_context}")
+    else:
+        print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        
 
 if __name__ == "__main__":
