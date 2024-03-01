@@ -127,7 +127,7 @@ def main():
     
     global is_insert 
     global mode
-    
+    token_used = 0
     start = time.time()
     question_count = 0
     correct = 0
@@ -194,16 +194,17 @@ def main():
                 semintic_search_time = time.time()-timer
                 timer = time.time()
                 answer, token_usage = send_to_openai(question, context)
+                token_used += token_usage
                 openai_time = time.time()-timer
                 question_count += 1
                 if compare_response(answer, expected):
                     correct += 1        
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer}")
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
                 with open("result.txt", "w") as result:
-                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n took {time.time() - start}")
-                    result.write(f"\nToken_usage: {token_usage}\n")
+                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n | took {time.time() - start}")
+                    result.write(f"\n Total Token used: {token_used}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
