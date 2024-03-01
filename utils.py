@@ -106,7 +106,7 @@ import numpy as np
 from FlagEmbedding import FlagReranker
 import re 
 
-def custom_sent_tokenize(text, max_token_length=128):
+def custom_sent_tokenize(text, max_token_length=256):
     sentences = re.split(r'(?<=[.!?])\s+', text)
     token_length = 0
     result = []
@@ -123,11 +123,10 @@ def custom_sent_tokenize(text, max_token_length=128):
         result.append(current_sentence.strip())
     return result
 
-def retrieve_context_from_texts(texts, question, top_x = 3):
+def retrieve_context_from_texts(texts, question, top_x = 6):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
-    text_sentences = [custom_sent_tokenize(text, 128) for text in texts]
-    print(text_sentences)
+    text_sentences = [custom_sent_tokenize(text, ) for text in texts]
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
     # Compute TF-IDF vectors for question and text sentences
