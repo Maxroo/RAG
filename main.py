@@ -12,7 +12,7 @@ import time
 is_insert = False
 mode = ''
 
-def construct_request(question):
+def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
     headers = {
     "Content-Type": "application/json"
@@ -26,7 +26,7 @@ def construct_request(question):
                 "default_operator": "or"
             }
         },
-        "size": 2
+        "size": size
     }
     payload["query"]["simple_query_string"]["query"] = question
     return request, headers, payload
@@ -242,13 +242,12 @@ def main():
             arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
         print(f"Question: {arg_question}")
         question = arg_question
-        request, headers, payload = construct_request(question)
+        request, headers, payload = construct_request(question, 3)
         response = rq.get(request, headers=headers, json=payload)
         json_response = response.json()
         for hit in json_response['hits']['hits']:
             source = hit['_source']
             print("title:", source.get('title', 'N/A'))
-            print("\n\n")
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        
