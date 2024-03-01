@@ -7,6 +7,7 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
+from FlagEmbedding import FlagReranker
 
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
