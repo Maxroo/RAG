@@ -248,7 +248,6 @@ def main():
         for hit in json_response['hits']['hits']:
             source = hit['_source']
             print("title:", source.get('title', 'N/A'))
-            print("text:", source.get('text', 'N/A'))
             print("\n\n")
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
