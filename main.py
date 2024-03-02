@@ -6,37 +6,47 @@ import requests as rq
 import json 
 import pickle
 import os
+import sys
+import time
 
-def construct_request(question):
+is_insert = False
+mode = ''
+
+def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
-    
     headers = {
     "Content-Type": "application/json"
     }
     # Request payload
     payload = {
         "query": {
-            "query_string": {
-                "query": "",
-                "fields": ["text"]
+            "simple_query_string" : {
+                "query": "Gregg Rolie and Rob Tyner, are not a keyboardist.",
+                "fields": ["title", "text"],
+                "default_operator": "or"
             }
         },
-        "size": 2
+        "size": size
     }
-    payload["query"]["query_string"]["query"] = question
+    payload["query"]["simple_query_string"]["query"] = question
     return request, headers, payload
 
 
 # loop through the json file from response and get each field
 def process_response(response):
+    timer = time.time()
     json_response = response.json()
+    if mode == '-f':
+        with open("time.txt", "a") as log:
+            log.write(f"elastic search took {time.time()-timer} seconds |", end = '')
+    else: 
+        print(f"elastic search took {time.time()-timer} seconds")
     index = None
     for hit in json_response['hits']['hits']:
         # Accessing individual fields in each hit
         source = hit['_source']
         # print("Document ID:", source.get('page_id', 'N/A'))
-        # print("opening_text:", source.get('opening_text', 'N/A'))
-        # # print(hit)
+        # print("text:", source.get('text', 'N/A'))
         # print("\n\n\n\n")
         index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
     return index
@@ -59,20 +69,22 @@ def check_indexed_files(file_id, indexed_files):
         return True
     return false
         
-def index_document(page_id, text):
-    index_file_set = get_indexed_files()
+def index_document(page_id, text):    
+    index_file_set = get_indexed_files()    
+    document = Document(text=text)
+    Documents = [document] 
+    
     if index_file_set == None:
         index_file_set = set()
     if page_id in index_file_set:
-        index = build_sentence_window_index(Documents)
-        return index
+        index = utils.build_sentence_window_index(Documents)
     else:
+        global is_insert 
+        is_insert = True
+        index = utils.build_sentence_window_index(Documents, insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
-        document = Document(text=text)
-        Documents = [document] 
-        index = build_sentence_window_index(Documents, insert = True)
-        return index
+    return index
 
 def compare_response(result, expected):
     if 'true' in result.lower() and 'supports' in expected.lower():
@@ -81,36 +93,168 @@ def compare_response(result, expected):
         return True
     return False
 
+def get_response_no_index(question,response):
+    json_response = response.json()
+    texts = []
+    for hit in json_response['hits']['hits']:
+        source = hit['_source']
+        texts.append(source.get('text', 'N/A'))
+    res = utils.openai_query(question + " . Is the statement true or false?", texts)
+    answer = res.choices[0].text
+    token_usage = res.usage.total_tokens
+    return answer, token_usage
+
+def get_texts_from_response(response):
+    json_response = response.json()
+    texts = []
+    for hit in json_response['hits']['hits']:
+        source = hit['_source']
+        texts.append(source.get('text', 'N/A'))
+    return texts
+
+def semintic_search(question, texts):
+        # print(f"Question: {arg_question}")
+        relevant_context = utils.retrieve_context_from_texts(texts, question)
+        return relevant_context
+            
+def send_to_openai(question, texts):
+    res = utils.openai_query(question + " . Is the statement true or false?", texts)
+    answer = res.choices[0].text
+    token_usage = res.usage.total_tokens
+    return answer, token_usage
+
 def main():
+    
+    global is_insert 
+    global mode
+    token_used = 0
+    start = time.time()
     question_count = 0
     correct = 0
     skiped = 0
-    # init log and result files to record
-    log = open("log.txt", "w")
-    result = open("result.txt", "w")
-    # loop through the dev2hops.json file and get the question
-    dev2hops = open("dev2hops.json", "r")
-    dev2hops_json = json.load(dev2hops)
-    for statement in dev2hops_json:
+    read_index_set_time = 0
+    index_time = 0
+    inference_time = 0
+    if len(sys.argv) > 2:
+        mode = sys.argv[1]
+    ## -------------- test ----------------
+    if(mode == '-q'):
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
         index = None
-        question = statement['claim']
-        expected = statement['label']
+        expected = "supports"
         request, headers, payload = construct_request(question)
         response = rq.get(request, headers=headers, json=payload)   
+        timer = time.time()
         index = process_response(response)
+        print(f"Indexing took {time.time()-timer} seconds, Insert: {is_insert}" )
         if(index == None):
             #skip this question
-            log.write(f"Index is None for question {question}")
+            print(f"error: Index is None for question {question}")
             skiped += 1
-            continue
-        engine = get_sentence_window_query_engine(index)
-        answer = engine.query(question + "For this statement give me a true or false answer.")
+            return 
+        timer = time.time()
+        engine = utils.get_sentence_window_query_engine(index)
+        print(f"Getting engine took {time.time()-timer} seconds")
+        timer = time.time()
+        query_answer = engine.query(question + "Is the statement true or false?")
+        print (f"Querying took {time.time()-timer} seconds")
+        answer = query_answer.response
         if compare_response(answer, expected):
             correct += 1 
-        #log.write(f"Questions: {question}\nExpected: {expected}\nAnswer: {answer}\n")
-    result.write(f"Total Questions: {question_count}\nSkiped: {skiped}\nCorrect: {correct}\nAccuracy: {correct/question_count * 100}%\n")
-    log.close()
-    result.close()
+        print(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
+    ## -------------- end test ----------------
+            
+    #init log and result files to record
+    #loop through the dev2hops.json file and get the question
+    elif mode == '-f':
+        with open("log.txt", "w"):
+            pass
+        with open("result.txt", "w"):
+            pass
+        file_path = sys.argv[2]
+        
+        with open(file_path, "r") as file:
+            file = json.load(file)
+            for statement in file:
+                question_timer = time.time()
+                question = statement['claim']
+                expected = statement['label']
+                
+                request, headers, payload = construct_request(question)
+                response = rq.get(request, headers=headers, json=payload)   
+                
+                timer = time.time()
+                # answer, token_usage = get_response_no_index(question ,response)
+                texts = get_texts_from_response(response)
+                context = semintic_search(question, texts)
+                semintic_search_time = time.time()-timer
+                timer = time.time()
+                answer, token_usage = send_to_openai(question, context)
+                token_used += token_usage
+                openai_time = time.time()-timer
+                question_count += 1
+                if compare_response(answer, expected):
+                    correct += 1        
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
+                with open("result.txt", "w") as result:
+                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n | took {time.time() - start}")
+                    result.write(f"\n Total Token used: {token_used}\n")
+    elif mode == '-m':
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        timer = time.time()
+        request, headers, payload = construct_request(question)
+        response = rq.get(request, headers=headers, json=payload)  
+        texts = get_texts_from_response(response)
+        context = semintic_search(question, texts)
+        semintic_search_time = time.time()-timer
+        answer, token_usage = send_to_openai(question, context) 
+        print(f"token usage: {token_usage}")
+        print (f"question took {time.time()-timer} seconds")
+        print(f"Questions: {question} | Answer: {answer}\n")
+        
+    elif mode == '-s':
+        print("Test Semintic search")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        request, headers, payload = construct_request(question, 3)
+        response = rq.get(request, headers=headers, json=payload)   
+        timer = time.time()
+        texts = get_texts_from_response(response)
+        relevant_context = semintic_search(question, texts)
+        print(f"Semintic search took {time.time()-timer} seconds")
+        print(f"Relevant context:")
+        for text in relevant_context:
+            print(f"Text: {text}")
+        
+    elif mode == '-e':
+        print("Test Elastic search")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        request, headers, payload = construct_request(question, 3)
+        response = rq.get(request, headers=headers, json=payload)
+        json_response = response.json()
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            print("title:", source.get('title', 'N/A'))
+    else:
+        print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
+        return        
 
 if __name__ == "__main__":
     main()
