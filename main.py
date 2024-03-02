@@ -218,7 +218,6 @@ def main():
         context = semintic_search(question, texts)
         semintic_search_time = time.time()-timer
         answer, token_usage = send_to_openai(question, context) 
-        answer, token_usage = get_response_no_index(question ,response)
         print(f"token usage: {token_usage}")
         print (f"question took {time.time()-timer} seconds")
         print(f"Questions: {question} | Answer: {answer}\n")
