@@ -7,8 +7,6 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
-from FlagEmbedding import FlagReranker
-import tiktoken
 
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
@@ -106,7 +104,8 @@ from nltk.tokenize import sent_tokenize
 import numpy as np
 from FlagEmbedding import FlagReranker
 import re 
-from itertools import islice
+from split_string import split_string_with_limit
+import tiktoken
 
 def custom_sent_tokenize(text, max_token_length=256):
     sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -149,25 +148,8 @@ def retrieve_context_from_texts(texts, question, top_x = 6):
     relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
     return relevant_context
     
-    
-def batched(iterable, n):
-    """Batch data into tuples of length n. The last batch may be shorter."""
-    # batched('ABCDEFG', 3) --> ABC DEF G
-    if n < 1:
-        raise ValueError('n must be at least one')
-    it = iter(iterable)
-    while (batch := tuple(islice(it, n))):
-        yield batch
 
 def chunked_tokens(text, encoding_name, chunk_length):
     encoding = tiktoken.get_encoding(encoding_name)
-    tokens = encoding.encode(text)
-    chunks_iterator = batched(tokens, chunk_length)
-    yield from chunks_iterator
-
-# test = chunked_tokens("This is a test", "cl100k_base", 2)
-# print(test)
-# for chunk in chunked_tokens("This is a test", "cl100k_base", 2):
-#     print(chunk)
-
-# print(custom_sent_tokenize("This is a test", 2) for text in ["this is a test", "this is another test"])
+    texts = split_string_with_limit(text, chunk_length, encoding)
+    return texts
