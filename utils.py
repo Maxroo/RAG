@@ -33,7 +33,7 @@ def load_chromadb(chroma_collection, db_name="enwiki", wikidata):
             ids = pages.index.map(str).tolist()
         )
     
-def build_contexts_with_chromadb(chroma_collection, emb_model, question, top_x=6):
+def build_contexts_with_chromadb(chroma_collection, emb_model):
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
     service_context = ServiceContext.from_defaults(embed_model=emb_model)
@@ -42,6 +42,7 @@ def build_contexts_with_chromadb(chroma_collection, emb_model, question, top_x=6
         vector_store,
         service_context=service_context,
     )
+    return index
 
 def query_with_chromadb(index, question, top_x=6):
     query_engine = index.as_query_engine()
