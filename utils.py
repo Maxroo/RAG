@@ -9,6 +9,46 @@ from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
 from FlagEmbedding import FlagReranker
 
+import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import chromadb.utils.embedding_functions as embedding_functions
+from llama_index.vector_stores import ChromaVectorStore
+from llama_index.embeddings import HuggingFaceEmbedding
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+
+
+def setup_chromadb(db_name="enwiki", emd_model_name="BAAI/bge-large-en-v1.5"):
+    chroma_client = chromadb.PersistentClient(path='/home/thomo/yichun/RAG/chromadb')
+    emb_model  = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=emd_model_name)
+    chroma_collection = chroma_client.get_or_create_collection(name=db_name,
+                                                                     metadata={"hnsw:space": "cosine"}, # l2 is the default
+                                                                     embedding_function=emb_model)
+    return chroma_client, emb_model, chroma_collection
+
+def load_chromadb(chroma_collection, db_name="enwiki", wikidata):
+    # chroma_collection = setup_chromadb(db_name)
+    chroma_collection.add(
+            documents = pages.content.tolist(),
+            metadatas = pages.title.apply(lambda title: {"title": title}).tolist(),
+            ids = pages.index.map(str).tolist()
+        )
+    
+def build_contexts_with_chromadb(chroma_collection, emb_model, question, top_x=6):
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+    service_context = ServiceContext.from_defaults(embed_model=emb_model)
+
+    index = VectorStoreIndex.from_vector_store(
+        vector_store,
+        service_context=service_context,
+    )
+
+def query_with_chromadb(index, question, top_x=6):
+    query_engine = index.as_query_engine()
+    results = query_engine.query(question, top_k=top_x)
+
+
+
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
     return os.getenv("OPENAI_API_KEY")
