@@ -12,7 +12,7 @@ from FlagEmbedding import FlagReranker
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import chromadb.utils.embedding_functions as embedding_functions
-from llama_index.vector_stores import ChromaVectorStore
+from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
