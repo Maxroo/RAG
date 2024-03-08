@@ -124,7 +124,7 @@ def custom_sent_tokenize(text, max_token_length=256):
         result.append(current_sentence.strip())
     return result
 
-def retrieve_context_from_texts(texts, question, top_x = 6):
+def retrieve_context_from_texts(texts, question, top_x = 6, chunk_length=256):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
     # text_sentences = [custom_sent_tokenize(text, ) for text in texts]

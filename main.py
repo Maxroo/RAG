@@ -173,18 +173,20 @@ def main():
     elif mode == '-f':
         with open("log.txt", "w"):
             pass
-        with open("result.txt", "w"):
-            pass
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
+            top_x = 6
+            chunk_length = 256
+            elastic_search_file_size = 3
+            
             file = json.load(file)
             for statement in file:
                 question_timer = time.time()
                 question = statement['claim']
                 expected = statement['label']
                 
-                request, headers, payload = construct_request(question)
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
                 response = rq.get(request, headers=headers, json=payload)   
                 
                 timer = time.time()
@@ -202,9 +204,11 @@ def main():
                 with open("log.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
-                with open("result.txt", "w") as result:
-                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n | took {time.time() - start}")
-                    result.write(f"\n Total Token used: {token_used}\n")
+                with open("result.txt", "a") as result:
+                    result.write(f"file: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                    result.write(f"------------------------------------------------------------------------------------------------------------------\n")
+                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s", end = '')
+                    result.write(f"| Total Token used: {token_used}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
