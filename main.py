@@ -176,7 +176,7 @@ def main():
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
-            top_x = 12
+            top_x = 16
             chunk_length = 256
             elastic_search_file_size = 3
             
