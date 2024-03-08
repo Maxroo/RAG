@@ -289,9 +289,7 @@ def main():
         query_answer = engine.query(question + "Is the statement true or false?")
         print (f"Querying took {time.time()-timer} seconds")
         answer = query_answer.response
-        if compare_response(answer, expected):
-            correct += 1 
-        print(f"Questions: {question} | Answer: {answer}\n")
+        print(f"Questions: {question} | Answer: {answer} | took: {time.time() - start}\n")
 
         
 
