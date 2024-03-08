@@ -25,7 +25,7 @@ def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
                                                                      embedding_function=emb_model)
     return chroma_client, chroma_collection
 
-def load_chromadb(chroma_collection, db_name="enwiki", titles, texts, ids):
+def load_chromadb(chroma_collection, titles, texts, ids):
     # chroma_collection = setup_chromadb(db_name)
     chroma_collection.add(
             documents = texts,
