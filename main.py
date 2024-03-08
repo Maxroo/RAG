@@ -298,8 +298,6 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
-            top_x = 16
-            chunk_length = 256
             elastic_search_file_size = 8
             
             # maximum token openAI 3.5 can handle is 4096
@@ -360,13 +358,13 @@ def main():
                 target_names = ['chatGPT 3.5']
                 
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
                     log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds, chroma_time {chroma_time} seconds\n")    
             
             with open("result.txt", "a") as result:
-                result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
+                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=target_names)}")
 
     else:
