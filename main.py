@@ -176,9 +176,11 @@ def main():
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
-            top_x = 6
+            top_x = 12
             chunk_length = 256
             elastic_search_file_size = 3
+            
+            # maximum token openAI 3.5 can handle is 4096
             
             file = json.load(file)
             for statement in file:
