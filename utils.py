@@ -7,6 +7,65 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
+from FlagEmbedding import FlagReranker
+
+import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import chromadb.utils.embedding_functions as embedding_functions
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+import pandas as pd
+
+EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+
+def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
+    chroma_client = chromadb.PersistentClient(path='/home/thomo/yichun/RAG/chromadb')
+    emb_model  = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=emd_model_name)
+    chroma_collection = chroma_client.get_or_create_collection(name=db_name,
+                                                                     metadata={"hnsw:space": "cosine"}, # l2 is the default
+                                                                     embedding_function=emb_model)
+    return chroma_client, chroma_collection
+
+def load_chromadb(chroma_collection, titles, texts, ids):
+    # chroma_collection = setup_chromadb(db_name)
+    df_temp = pd.DataFrame(titles, columns=["title"])
+    title_list = df_temp["title"].apply(lambda title: {"title": title}).tolist() 
+    chroma_collection.add(
+            documents = texts,
+            metadatas = title_list, # pages.title.apply(lambda title: {"title": title}).tolist(),
+            ids = ids# pages.index.map(str).tolist()
+        )
+    
+def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+    emd_model_llama = HuggingFaceEmbedding(model_name=emd_model_name)
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    # service_context = ServiceContext.from_defaults(embed_model=emd_model_llama)
+
+    # create the sentence window node parser w/ default settings
+    node_parser = SentenceWindowNodeParser.from_defaults(
+        window_size=3,
+        window_metadata_key="window",
+        original_text_metadata_key="original_text",
+    )
+    service_context = ServiceContext.from_defaults(
+        llm=llm,
+        embed_model=emd_model_llama,
+        node_parser=node_parser,
+    )
+    
+    index = VectorStoreIndex.from_vector_store(
+        vector_store,
+        service_context=service_context,
+    )
+
+    return index
+
+def query_with_chromadb(index, question, top_x=6):
+    query_engine = index.as_query_engine()
+    results = query_engine.query(question, top_k=top_x)
+
+
 
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
@@ -49,7 +108,11 @@ def openai_query(question, documents):
 
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
+<<<<<<< HEAD
     embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
+=======
+    embed_model="BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
+>>>>>>> 11e3ffccef5aaa56fa599c0ae8cdf054ee11af2e
 ):
     # create the sentence window node parser w/ default settings
     node_parser = SentenceWindowNodeParser.from_defaults(
@@ -104,8 +167,11 @@ from nltk.tokenize import sent_tokenize
 import numpy as np
 from FlagEmbedding import FlagReranker
 import re 
+<<<<<<< HEAD
 from split_string import split_string_with_limit
 import tiktoken
+=======
+>>>>>>> 11e3ffccef5aaa56fa599c0ae8cdf054ee11af2e
 
 def custom_sent_tokenize(text, max_token_length=256):
     sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -124,12 +190,19 @@ def custom_sent_tokenize(text, max_token_length=256):
         result.append(current_sentence.strip())
     return result
 
+<<<<<<< HEAD
 def retrieve_context_from_texts(texts, question, top_x = 6, chunk_length=256):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
     # text_sentences = [custom_sent_tokenize(text, ) for text in texts]
     text_sentences = [chunked_tokens(text,"cl100k_base", 256) for text in texts]
     
+=======
+def retrieve_context_from_texts(texts, question, top_x = 6):
+    # Tokenize question and texts into sentences
+    question_sentences = sent_tokenize(question)
+    text_sentences = [custom_sent_tokenize(text, ) for text in texts]
+>>>>>>> 11e3ffccef5aaa56fa599c0ae8cdf054ee11af2e
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
     # Compute TF-IDF vectors for question and text sentences
@@ -147,9 +220,24 @@ def retrieve_context_from_texts(texts, question, top_x = 6, chunk_length=256):
         top_x = len(sorted_indices)
     relevant_context = [flat_text_sentences[i] for i in sorted_indices[:top_x]] 
     return relevant_context
+<<<<<<< HEAD
     
 
 def chunked_tokens(text, encoding_name, chunk_length):
     encoding = tiktoken.get_encoding(encoding_name)
     texts = split_string_with_limit(text, chunk_length, encoding)
     return texts
+=======
+    # query = [question] * len(flat_text_sentences)
+    # print(qu/ery)
+    # print(flat_text_sentences)
+    # reranker = FlagReranker('BAAI/bge-reranker-base', use_fp16=True)
+    # score = reranker.compute_score([[question, 'where is that'], flat_text_sentences])
+    # print(score)
+    # # scores = reranker(question, flat_text_sentences )
+    # ranked_indices = sorted(range(len(score)), key=lambda i: score[i], reverse=True)
+    # ranked_passages = [flat_text_sentences[i] for i in ranked_indices]
+    # if len(ranked_passages) < top_x:
+    #     top_x = len(ranked_passages)
+    # return ranked_passages[:top_x]
+>>>>>>> 11e3ffccef5aaa56fa599c0ae8cdf054ee11af2e
