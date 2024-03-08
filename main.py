@@ -270,7 +270,7 @@ def main():
             source = hit['_source']
             title = source.get('title', 'N/A')
             text = source.get('text', 'N/A')
-            id = source.get('page_id', 'N/A')
+            id = str(source.get('page_id', 'N/A'))
             titles.append(title)
             texts.append(text)
             ids.append(id)
