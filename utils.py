@@ -7,6 +7,7 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
+from llama_index.llms.together import TogetherLLM
 from FlagEmbedding import FlagReranker
 
 def get_openai_api_key():
@@ -15,6 +16,8 @@ def get_openai_api_key():
 
 openai.api_key = get_openai_api_key()
 openai_client = openai.OpenAI(api_key=get_openai_api_key())
+
+os.environ["TOGETHER_API_KEY"] = "961dc18e6db75ff4cd03bd6f050552cf0a9176ddaca57cf7fed646dc4925d646"
 
 def construct_prompt(question, documents):
     prompt_start = (
@@ -46,6 +49,13 @@ def openai_query(question, documents):
     )
     # print(f"Prompt: {prompt}") # for debugging
     # print(f"Response: {res}") # for debugging
+    return res
+
+def togetherai_query(question, documents):
+    prompt = construct_prompt(question, documents)
+    llm = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                      api_key=os.environ["TOGETHER_API_KEY"])
+    res = llm.complete(prompt)
     return res
 
 def build_sentence_window_index(

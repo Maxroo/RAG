@@ -67,7 +67,7 @@ def save_indexed_files(indexed_files):
 def check_indexed_files(file_id, indexed_files):
     if file_id in indexed_files:
         return True
-    return false
+    return False
         
 def index_document(page_id, text):    
     index_file_set = get_indexed_files()    
