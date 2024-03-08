@@ -291,7 +291,7 @@ def main():
         answer = query_answer.response
         if compare_response(answer, expected):
             correct += 1 
-        print(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
+        print(f"Questions: {question} | Answer: {answer}\n")
 
         
 
