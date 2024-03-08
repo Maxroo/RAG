@@ -275,7 +275,7 @@ def main():
             texts.append(text)
             ids.append(id)
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki")
-        utils.load_chromadb(chroma_collection, "enwiki", titles, texts, ids)
+        utils.load_chromadb(chroma_collection, titles, texts, ids)
         index = utils.build_contexts_with_chromadb(chroma_collection)
         timer = time.time()
         engine = utils.get_sentence_window_query_engine(index)
