@@ -206,10 +206,10 @@ def main():
                 with open("log.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
-                with open("result.txt", "a") as result:
-                    result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
-                    result.write(f"------------------------------------------------------------------------------------------------------------------\n")
-                    result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
+            with open("result.txt", "a") as result:
+                result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
