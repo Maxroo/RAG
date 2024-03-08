@@ -13,11 +13,11 @@ import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import chromadb.utils.embedding_functions as embedding_functions
 from llama_index.vector_stores import ChromaVectorStore
-from llama_index.embeddings import HuggingFaceEmbedding
-from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
+EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-def setup_chromadb(db_name="enwiki", emd_model_name="BAAI/bge-large-en-v1.5"):
+def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
     chroma_client = chromadb.PersistentClient(path='/home/thomo/yichun/RAG/chromadb')
     emb_model  = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=emd_model_name)
     chroma_collection = chroma_client.get_or_create_collection(name=db_name,
@@ -33,10 +33,11 @@ def load_chromadb(chroma_collection, db_name="enwiki", wikidata):
             ids = pages.index.map(str).tolist()
         )
     
-def build_contexts_with_chromadb(chroma_collection, emb_model):
+def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME):
+    emb_model_llama = HuggingFaceEmbedding(model_name=emd_model_name)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
-    service_context = ServiceContext.from_defaults(embed_model=emb_model)
+    service_context = ServiceContext.from_defaults(embed_model=emd_model_llama)
 
     index = VectorStoreIndex.from_vector_store(
         vector_store,
