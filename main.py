@@ -252,6 +252,44 @@ def main():
         for hit in json_response['hits']['hits']:
             source = hit['_source']
             print("title:", source.get('title', 'N/A'))
+
+    elif mode == '-v':
+        print("Test Elastic search with vectorDB and llama_index")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        request, headers, payload = construct_request(question, 3)
+        response = rq.get(request, headers=headers, json=payload)
+        json_response = response.json()
+        titles = []
+        texts = []
+        ids = []
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            title = source.get('title', 'N/A')
+            text = source.get('text', 'N/A')
+            id = source.get('page_id', 'N/A')
+            titles.append(title)
+            texts.append(text)
+            ids.append(id)
+        chroma_client, chroma_collection = utils.setup_chromadb("enwiki")
+        utils.load_chromadb(chroma_collection, "enwiki", titles, texts, ids)
+        index = utils.build_contexts_with_chromadb(chroma_collection)
+        timer = time.time()
+        engine = utils.get_sentence_window_query_engine(index)
+        print(f"Getting engine took {time.time()-timer} seconds")
+        timer = time.time()
+        query_answer = engine.query(question + "Is the statement true or false?")
+        print (f"Querying took {time.time()-timer} seconds")
+        answer = query_answer.response
+        if compare_response(answer, expected):
+            correct += 1 
+        print(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
+
+        
+
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        
