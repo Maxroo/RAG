@@ -108,11 +108,7 @@ def openai_query(question, documents):
 
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
-<<<<<<< HEAD
-    embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
-=======
     embed_model="BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
->>>>>>> 11e3ffccef5aaa56fa599c0ae8cdf054ee11af2e
 ):
     # create the sentence window node parser w/ default settings
     node_parser = SentenceWindowNodeParser.from_defaults(
