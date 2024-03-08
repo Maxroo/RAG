@@ -176,9 +176,9 @@ def main():
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
-            top_x = 28
-            chunk_length = 128
-            elastic_search_file_size = 5
+            top_x = 8
+            chunk_length = 512
+            elastic_search_file_size = 8
             
             # maximum token openAI 3.5 can handle is 4096
             
@@ -208,7 +208,7 @@ def main():
                     log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
             with open("result.txt", "a") as result:
                 result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
-                result.write(f"------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
