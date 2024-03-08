@@ -15,6 +15,8 @@ import chromadb.utils.embedding_functions as embedding_functions
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
+import pandas as pd
+
 EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
 def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
@@ -27,9 +29,11 @@ def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
 
 def load_chromadb(chroma_collection, titles, texts, ids):
     # chroma_collection = setup_chromadb(db_name)
+    df_temp = pd.DataFrame(titles, columns=["title"])
+    title_list = df_temp["title"].apply(lambda title: {"title": title}).tolist() 
     chroma_collection.add(
             documents = texts,
-            metadatas = titles, # pages.title.apply(lambda title: {"title": title}).tolist(),
+            metadatas = title_list, # pages.title.apply(lambda title: {"title": title}).tolist(),
             ids = ids# pages.index.map(str).tolist()
         )
     
