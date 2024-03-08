@@ -209,8 +209,7 @@ def main():
                 with open("result.txt", "a") as result:
                     result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                     result.write(f"------------------------------------------------------------------------------------------------------------------\n")
-                    result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s", end = '')
-                    result.write(f"| Total Token used: {token_used}\n")
+                    result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
