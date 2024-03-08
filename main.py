@@ -176,8 +176,8 @@ def main():
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
-            top_x = 16
-            chunk_length = 256
+            top_x = 28
+            chunk_length = 128
             elastic_search_file_size = 5
             
             # maximum token openAI 3.5 can handle is 4096
