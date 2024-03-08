@@ -7,6 +7,64 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
+from FlagEmbedding import FlagReranker
+
+import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import chromadb.utils.embedding_functions as embedding_functions
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+import pandas as pd
+
+EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+
+def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
+    chroma_client = chromadb.PersistentClient(path='/home/thomo/yichun/RAG/chromadb')
+    emb_model  = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=emd_model_name)
+    chroma_collection = chroma_client.get_or_create_collection(name=db_name,
+                                                                     metadata={"hnsw:space": "cosine"}, # l2 is the default
+                                                                     embedding_function=emb_model)
+    return chroma_client, chroma_collection
+
+def load_chromadb(chroma_collection, titles, texts, ids):
+    # chroma_collection = setup_chromadb(db_name)
+    title_list = [{"title": title} for title in titles]
+    chroma_collection.upsert( # instead of add
+            documents = texts,
+            metadatas = title_list, # pages.title.apply(lambda title: {"title": title}).tolist(),
+            ids = ids# pages.index.map(str).tolist()
+        )
+    
+def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+    emd_model_llama = HuggingFaceEmbedding(model_name=emd_model_name)
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    # service_context = ServiceContext.from_defaults(embed_model=emd_model_llama)
+
+    # create the sentence window node parser w/ default settings
+    node_parser = SentenceWindowNodeParser.from_defaults(
+        window_size=3,
+        window_metadata_key="window",
+        original_text_metadata_key="original_text",
+    )
+    service_context = ServiceContext.from_defaults(
+        llm=llm,
+        embed_model=emd_model_llama,
+        node_parser=node_parser,
+    )
+    
+    index = VectorStoreIndex.from_vector_store(
+        vector_store,
+        service_context=service_context,
+    )
+
+    return index
+
+def query_with_chromadb(index, question, top_x=6):
+    query_engine = index.as_query_engine()
+    results = query_engine.query(question, top_k=top_x)
+
+
 
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
