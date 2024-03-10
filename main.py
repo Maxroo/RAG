@@ -298,7 +298,7 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
-            elastic_search_file_size = 8
+            elastic_search_file_size = 14
             
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
@@ -363,7 +363,7 @@ def main():
             with open("result.txt", "a") as result:
                 result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"model: chatGPT 3.5 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
 
     else:
