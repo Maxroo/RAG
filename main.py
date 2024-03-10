@@ -355,7 +355,6 @@ def main():
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
-                target_names = ['chatGPT 3.5']
                 
                 with open("log.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
@@ -365,7 +364,7 @@ def main():
                 result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
-                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=target_names)}")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
