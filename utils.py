@@ -29,8 +29,9 @@ def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
 
 def load_chromadb(chroma_collection, titles, texts, ids):
     # chroma_collection = setup_chromadb(db_name)
-    title_list = [{"title": title} for title in titles]
-    chroma_collection.upsert( # instead of add
+    df_temp = pd.DataFrame(titles, columns=["title"])
+    title_list = df_temp["title"].apply(lambda title: {"title": title}).tolist() 
+    chroma_collection.add(
             documents = texts,
             metadatas = title_list, # pages.title.apply(lambda title: {"title": title}).tolist(),
             ids = ids# pages.index.map(str).tolist()
@@ -107,7 +108,7 @@ def openai_query(question, documents):
 
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
-    embed_model="local:BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
+    embed_model="BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
 ):
     # create the sentence window node parser w/ default settings
     node_parser = SentenceWindowNodeParser.from_defaults(

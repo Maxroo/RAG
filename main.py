@@ -8,6 +8,7 @@ import pickle
 import os
 import sys
 import time
+from sklearn.metrics import classification_report
 
 is_insert = False
 mode = ''
@@ -176,8 +177,8 @@ def main():
         file_path = sys.argv[2]
         
         with open(file_path, "r") as file:
-            top_x = 4
-            chunk_length = 1024
+            top_x = 16
+            chunk_length = 256
             elastic_search_file_size = 8
             
             # maximum token openAI 3.5 can handle is 4096
@@ -210,6 +211,7 @@ def main():
                 result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
+   
     elif mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
@@ -257,6 +259,114 @@ def main():
         for hit in json_response['hits']['hits']:
             source = hit['_source']
             print("title:", source.get('title', 'N/A'))
+
+    elif mode == '-v':
+        print("Test Elastic search with vectorDB and llama_index")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        request, headers, payload = construct_request(question, 3)
+        response = rq.get(request, headers=headers, json=payload)
+        json_response = response.json()
+        titles = []
+        texts = []
+        ids = []
+        for hit in json_response['hits']['hits']:
+            source = hit['_source']
+            title = source.get('title', 'N/A')
+            text = source.get('text', 'N/A')
+            id = str(source.get('page_id', 'N/A'))
+            titles.append(title)
+            texts.append(text)
+            ids.append(id)
+        chroma_client, chroma_collection = utils.setup_chromadb("enwiki")
+        utils.load_chromadb(chroma_collection, titles, texts, ids)
+        index = utils.build_contexts_with_chromadb(chroma_collection)
+        timer = time.time()
+        engine = utils.get_sentence_window_query_engine(index)
+        print(f"Getting engine took {time.time()-timer} seconds")
+        timer = time.time()
+        query_answer = engine.query(question + "Is the statement true or false?")
+        print (f"Querying took {time.time()-timer} seconds")
+        answer = query_answer.response
+        print(f"Questions: {question} | Answer: {answer} | took: {time.time() - start}\n")
+        
+    elif mode == '-vf':
+        with open("log.txt", "w"):
+            pass
+        file_path = sys.argv[2]
+        with open(file_path, "r") as file:
+            elastic_search_file_size = 8
+            
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            file = json.load(file)
+            for statement in file:
+                question_timer = time.time()
+                question = statement['claim']
+                expected = statement['label']
+                
+                if 'supports' in expected.lower():
+                    y_true.append(1)
+                else:
+                    y_true.append(0)  
+                    
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload)   
+                json_response = response.json()
+                titles = []
+                texts = []
+                ids = []
+                for hit in json_response['hits']['hits']:
+                    source = hit['_source']
+                    title = source.get('title', 'N/A')
+                    text = source.get('text', 'N/A')
+                    id = str(source.get('page_id', 'N/A'))
+                    titles.append(title)
+                    texts.append(text)
+                    ids.append(id)
+                 
+                timer = time.time()   
+                chroma_client, chroma_collection = utils.setup_chromadb("enwiki")
+                utils.load_chromadb(chroma_collection, titles, texts, ids)
+                chroma_time = time.time()-timer
+                
+                timer = time.time()
+                index = utils.build_contexts_with_chromadb(chroma_collection)
+                index_time = time.time()-timer
+                
+                timer = time.time()
+                engine = utils.get_sentence_window_query_engine(index)
+                engine_time = time.time()-timer
+                
+                timer = time.time()
+                query_answer = engine.query(question + "Is the statement true or false?")
+                query_time = time.time()-timer
+                
+                answer = query_answer.response
+                if compare_response(answer, expected):
+                    correct += 1 
+                question_count += 1
+                
+                if 'true' in answer.lower():
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+                target_names = ['chatGPT 3.5']
+                
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds, chroma_time {chroma_time} seconds\n")    
+            
+            with open("result.txt", "a") as result:
+                result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=target_names)}")
+
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return        
