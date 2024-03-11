@@ -168,49 +168,6 @@ def main():
             correct += 1 
         print(f"Questions: {question} | Expected: {expected} | Answer: {answer}\n")
     ## -------------- end test ----------------
-            
-    #init log and result files to record
-    #loop through the dev2hops.json file and get the question
-    elif mode == '-f':
-        with open("log.txt", "w"):
-            pass
-        file_path = sys.argv[2]
-        
-        with open(file_path, "r") as file:
-            top_x = 16
-            chunk_length = 256
-            elastic_search_file_size = 8
-            
-            # maximum token openAI 3.5 can handle is 4096
-            
-            file = json.load(file)
-            for statement in file:
-                question_timer = time.time()
-                question = statement['claim']
-                expected = statement['label']
-                
-                request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload)   
-                
-                timer = time.time()
-                # answer, token_usage = get_response_no_index(question ,response)
-                texts = get_texts_from_response(response)
-                context = semintic_search(question, texts)
-                semintic_search_time = time.time()-timer
-                timer = time.time()
-                answer, token_usage = send_to_openai(question, context)
-                token_used += token_usage
-                openai_time = time.time()-timer
-                question_count += 1
-                if compare_response(answer, expected):
-                    correct += 1        
-                with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
-                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
-            with open("result.txt", "a") as result:
-                result.write(f"\nfile: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
-                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
    
     elif mode == '-m':
         arg_question = sys.argv[2]
@@ -292,6 +249,64 @@ def main():
         print (f"Querying took {time.time()-timer} seconds")
         answer = query_answer.response
         print(f"Questions: {question} | Answer: {answer} | took: {time.time() - start}\n")
+        
+                
+    #init log and result files to record
+    #loop through the dev2hops.json file and get the question
+    elif mode == '-f':
+        with open("log.txt", "w"):
+            pass
+        file_path = sys.argv[2]
+        
+        with open(file_path, "r") as file:
+            top_x = 16
+            chunk_length = 256
+            elastic_search_file_size = 8
+            
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            
+            file = json.load(file)
+            for statement in file:
+                question_timer = time.time()
+                question = statement['claim']
+                expected = statement['label']
+                
+                if 'supports' in expected.lower():
+                    y_true.append(1)
+                else:
+                    y_true.append(0)
+                
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload)   
+                
+                timer = time.time()
+                # answer, token_usage = get_response_no_index(question ,response)
+                texts = get_texts_from_response(response)
+                context = semintic_search(question, texts)
+                semintic_search_time = time.time()-timer
+                timer = time.time()
+                answer, token_usage = send_to_openai(question, context)
+                token_used += token_usage
+                openai_time = time.time()-timer
+                question_count += 1
+                if compare_response(answer, expected):
+                    correct += 1        
+                
+                if 'true' in answer.lower():
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)    
+                
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
+            with open("result.txt", "a") as result:
+                result.write(f"\nCheap RAG file: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"Model: chatGPT3 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")    
         
     elif mode == '-vf':
         with open("log.txt", "w"):
