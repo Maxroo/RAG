@@ -300,7 +300,7 @@ def main():
                     y_pred.append(0)    
                 
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
+                    log.write(f"Question: {question} | xpected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
             with open("result.txt", "a") as result:
                 result.write(f"\nCheap RAG file: {file_path} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
@@ -378,9 +378,9 @@ def main():
                     log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds, chroma_time {chroma_time} seconds\n")    
             
             with open("result.txt", "a") as result:
-                result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n mode: chromaDB |  file: {file_path} | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"model: chatGPT 3.5 | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"model: chatGPT 3.5 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
 
     else:
