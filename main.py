@@ -313,8 +313,8 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
-            elastic_search_file_size = 14
-            sentence_window_size = 3
+            elastic_search_file_size = 8
+            sentence_window_size = 5
             similarity_top_k = 6
             rerank_top_n = 2
             # maximum token openAI 3.5 can handle is 4096
