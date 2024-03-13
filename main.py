@@ -314,7 +314,9 @@ def main():
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
             elastic_search_file_size = 14
-            
+            sentence_window_size = 3
+            similarity_top_k = 6
+            rerank_top_n = 2
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
@@ -350,11 +352,11 @@ def main():
                 chroma_time = time.time()-timer
                 
                 timer = time.time()
-                index = utils.build_contexts_with_chromadb(chroma_collection)
+                index = utils.build_contexts_with_chromadb(chroma_collection, window_size = sentence_window_size)
                 index_time = time.time()-timer
                 
                 timer = time.time()
-                engine = utils.get_sentence_window_query_engine(index)
+                engine = utils.get_sentence_window_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
                 engine_time = time.time()-timer
                 
                 timer = time.time()
@@ -378,7 +380,7 @@ def main():
             with open("result.txt", "a") as result:
                 result.write(f"\nfile: {file_path} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"model: chatGPT 3.5 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"model: chatGPT 3.5 | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
 
     else:

@@ -37,14 +37,14 @@ def load_chromadb(chroma_collection, titles, texts, ids):
             ids = ids# pages.index.map(str).tolist()
         )
     
-def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME, window_size = 3 ,llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
     emd_model_llama = HuggingFaceEmbedding(model_name=emd_model_name)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     # service_context = ServiceContext.from_defaults(embed_model=emd_model_llama)
 
     # create the sentence window node parser w/ default settings
     node_parser = SentenceWindowNodeParser.from_defaults(
-        window_size=3,
+        window_size=window_size,
         window_metadata_key="window",
         original_text_metadata_key="original_text",
     )
