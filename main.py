@@ -316,7 +316,7 @@ def main():
             elastic_search_file_size = 8
             sentence_window_size = 5
             similarity_top_k = 6
-            rerank_top_n = 2
+            rerank_top_n = 6
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
