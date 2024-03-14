@@ -29,9 +29,8 @@ def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
 
 def load_chromadb(chroma_collection, titles, texts, ids):
     # chroma_collection = setup_chromadb(db_name)
-    df_temp = pd.DataFrame(titles, columns=["title"])
-    title_list = df_temp["title"].apply(lambda title: {"title": title}).tolist() 
-    chroma_collection.add(
+    title_list = [{"title": title} for title in titles]
+    chroma_collection.upsert( # instead of add
             documents = texts,
             metadatas = title_list, # pages.title.apply(lambda title: {"title": title}).tolist(),
             ids = ids# pages.index.map(str).tolist()
