@@ -2,7 +2,12 @@ import os
 from dotenv import load_dotenv, find_dotenv
 import openai
 from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.node_parser import SentenceWindowNodeParser
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core import Document
+from llama_index.core import Settings
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
@@ -19,7 +24,7 @@ import pandas as pd
 
 EMD_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-def setup_chromadb(db_name="enwiki", emd_model_name=EMD_MODEL_NAME):
+def setup_chromadb(db_name, emd_model_name=EMD_MODEL_NAME):
     chroma_client = chromadb.PersistentClient(path='/home/thomo/yichun/RAG/chromadb')
     emb_model  = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=emd_model_name)
     chroma_collection = chroma_client.get_or_create_collection(name=db_name,
@@ -36,33 +41,57 @@ def load_chromadb(chroma_collection, titles, texts, ids):
             ids = ids# pages.index.map(str).tolist()
         )
     
-def build_contexts_with_chromadb(chroma_collection, emd_model_name=EMD_MODEL_NAME, window_size = 3 ,llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
-    emd_model_llama = HuggingFaceEmbedding(model_name=emd_model_name)
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    # service_context = ServiceContext.from_defaults(embed_model=emd_model_llama)
+def parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama,llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), chunk_size=512, chunk_overlap=70):
+    documents = [Document(text=t) for t in texts]
 
-    # create the sentence window node parser w/ default settings
+    base_parser = SentenceSplitter.from_defaults(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    chunks = base_parser.get_nodes_from_documents(documents)
+
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    Settings.llm = llm
+    Settings.embed_model = emd_model_llama
+
+    index = VectorStoreIndex(
+        chunks,
+        storage_context=storage_context,
+    )
+    return index
+
+def get_query_engine(index, similarity_top_k=6, rerank_top_n=2):
+    # query_engine = index.as_query_engine(similarity_top_k=top_x)
+    rerank = SentenceTransformerRerank(
+        top_n=rerank_top_n, model="BAAI/bge-reranker-base"
+    )
+    query_engine = index.as_query_engine(
+        similarity_top_k=similarity_top_k, node_postprocessors=[rerank]
+    )
+    return query_engine
+
+
+def parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, window_size=3, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+    documents = [Document(text=t) for t in texts]
+
     node_parser = SentenceWindowNodeParser.from_defaults(
         window_size=window_size,
         window_metadata_key="window",
         original_text_metadata_key="original_text",
     )
-    service_context = ServiceContext.from_defaults(
-        llm=llm,
-        embed_model=emd_model_llama,
-        node_parser=node_parser,
-    )
-    
-    index = VectorStoreIndex.from_vector_store(
-        vector_store,
-        service_context=service_context,
-    )
+
+    nodes = node_parser.get_nodes_from_documents(documents)
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    Settings.llm = llm
+    Settings.embed_model = emd_model_llama
+
+    index = VectorStoreIndex(
+        nodes,
+        # service_context=service_context,
+        storage_context=storage_context)
 
     return index
-
-def query_with_chromadb(index, question, top_x=6):
-    query_engine = index.as_query_engine()
-    results = query_engine.query(question, top_k=top_x)
 
 
 

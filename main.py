@@ -2,6 +2,7 @@ import utils
 # from llama_index.response.notebook_utils import display_response    
 from pathlib import Path
 from llama_index.core import Document
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import requests as rq
 import json 
 import pickle
@@ -52,23 +53,23 @@ def process_response(response):
         index = index_document(source.get('page_id', 'N/A'), source.get('text', 'N/A'))
     return index
         
-def get_indexed_files():
+def get_indexed_files(filename = 'indexed_files.pickle'):
     try:
-        with open('indexed_files.pickle', 'rb') as handle:
+        with open(filename, 'rb') as handle:
             indexed_files = pickle.load(handle)
         return indexed_files
     except IOError as e:
         print(f"Couldn't read to file indexed_files.pickle")
         return None
     
-def save_indexed_files(indexed_files):
-    with open('indexed_files.pickle', 'wb') as handle:
+def save_indexed_files(indexed_files, filename = 'indexed_files.pickle'):
+    with open(filename, 'wb') as handle:
         pickle.dump(indexed_files, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
 def check_indexed_files(file_id, indexed_files):
     if file_id in indexed_files:
         return True
-    return false
+    return False
         
 def index_document(page_id, text):    
     index_file_set = get_indexed_files()    
@@ -308,13 +309,20 @@ def main():
                 result.write(f"Model: chatGPT3 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")    
         
-    elif mode == '-vf':
-        with open("log.txt", "w"):
+    elif mode == '-vc':
+        emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
+        chroma_client, chroma_collection = utils.setup_chromadb("enwiki-chunks")
+        # file_set = get_indexed_files("file_set_vn.pickle")    
+        # if file_set == None:
+        #     file_set = set()
+        file_set = set()
+        with open("log-vc.txt", "w"):
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
             elastic_search_file_size = 8
-            sentence_window_size = 5
+            chunk_size = 512
+            chunk_overlap = 70
             similarity_top_k = 6
             rerank_top_n = 6
             # maximum token openAI 3.5 can handle is 4096
@@ -342,17 +350,98 @@ def main():
                     title = source.get('title', 'N/A')
                     text = source.get('text', 'N/A')
                     id = str(source.get('page_id', 'N/A'))
+                    if id in file_set:
+                        continue
+                    file_set.add(id)
                     titles.append(title)
                     texts.append(text)
                     ids.append(id)
+                if len(titles) == 0:
+                    continue
                  
-                timer = time.time()   
-                chroma_client, chroma_collection = utils.setup_chromadb("enwiki")
-                utils.load_chromadb(chroma_collection, titles, texts, ids)
-                chroma_time = time.time()-timer
+                timer = time.time()
+                index = utils.parse_chunks_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap)
+                index_time = time.time()-timer
                 
                 timer = time.time()
-                index = utils.build_contexts_with_chromadb(chroma_collection, window_size = sentence_window_size)
+                engine = utils.get_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
+                engine_time = time.time()-timer
+                
+                timer = time.time()
+                query_answer = engine.query(question + "Is the statement true or false?")
+                query_time = time.time()-timer
+                
+                answer = query_answer.response
+                if compare_response(answer, expected):
+                    correct += 1 
+                question_count += 1
+                
+                if 'true' in answer.lower():
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+                
+                with open("log-vc.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
+            
+            with open("result-vc.txt", "a") as result:
+                result.write(f"\n mode: chromaDB |  file: {file_path} | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: chatGPT 3.5 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
+
+    elif mode == '-vn':
+        emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
+        chroma_client, chroma_collection = utils.setup_chromadb("enwiki-nodes")
+        # file_set = get_indexed_files("file_set_vn.pickle")    
+        # if file_set == None:
+        #     file_set = set()
+        file_set = set()
+        with open("log-vn.txt", "w"):
+            pass
+        file_path = sys.argv[2]
+        with open(file_path, "r") as file:
+            elastic_search_file_size = 8
+            sentence_window_size = 5
+            similarity_top_k = 6
+            rerank_top_n = 3
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            file = json.load(file)
+            for statement in file:
+                question_timer = time.time()
+                question = statement['claim']
+                expected = statement['label']
+                
+                if 'supports' in expected.lower():
+                    y_true.append(1)
+                else:
+                    y_true.append(0)  
+                    
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload)   
+                json_response = response.json()
+                titles = []
+                texts = []
+                ids = []
+                for hit in json_response['hits']['hits']:
+                    source = hit['_source']
+                    title = source.get('title', 'N/A')
+                    text = source.get('text', 'N/A')
+                    id = str(source.get('page_id', 'N/A'))
+                    if id in file_set:
+                        continue
+                    file_set.add(id)
+                    titles.append(title)
+                    texts.append(text)
+                    ids.append(id)
+                if len(titles) == 0:
+                    continue
+                 
+                timer = time.time()
+                index = utils.parse_nodes_return_index(texts, chroma_collection, emd_model_llama, sentence_window_size)
                 index_time = time.time()-timer
                 
                 timer = time.time()
@@ -373,15 +462,16 @@ def main():
                 else :
                     y_pred.append(0)
                 
-                with open("log.txt", "a") as log:
+                with open("log-vn.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
-                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds, chroma_time {chroma_time} seconds\n")    
+                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds")    
             
-            with open("result.txt", "a") as result:
+            with open("result-vn.txt", "a") as result:
                 result.write(f"\n mode: chromaDB |  file: {file_path} | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: chatGPT 3.5 | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
+        # save_indexed_files(file_set, "file_set_vn.pickle")
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
