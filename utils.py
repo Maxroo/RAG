@@ -8,7 +8,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.together import TogetherLLM
-from FlagEmbedding import FlagReranker
+# from FlagEmbedding import FlagReranker
 
 def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
@@ -112,7 +112,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize
 import numpy as np
-from FlagEmbedding import FlagReranker
+# from FlagEmbedding import FlagReranker
 import re 
 
 def custom_sent_tokenize(text, max_token_length=256):

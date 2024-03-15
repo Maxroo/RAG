@@ -32,7 +32,6 @@ def construct_request(question, size = 2):
     payload["query"]["simple_query_string"]["query"] = question
     return request, headers, payload
 
-
 # loop through the json file from response and get each field
 def process_response(response):
     timer = time.time()
@@ -78,11 +77,13 @@ def index_document(page_id, text):
     if index_file_set == None:
         index_file_set = set()
     if page_id in index_file_set:
-        index = utils.build_sentence_window_index(Documents)
+        # index = utils.build_sentence_window_index(Documents)
+        index = utils.build_sentence_window_index(Documents, llm = "mistralai/Mixtral-8x7B-Instruct-v0.1")
     else:
         global is_insert 
         is_insert = True
-        index = utils.build_sentence_window_index(Documents, insert = True)
+        # index = utils.build_sentence_window_index(Documents, insert = True)
+        index = utils.build_sentence_window_index(Documents, llm = "mistralai/Mixtral-8x7B-Instruct-v0.1", insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
     return index
