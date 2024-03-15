@@ -310,8 +310,15 @@ def main():
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")    
         
     elif mode == '-vc':
+        elastic_search_file_size = 8
+        chunk_size = 512
+        chunk_overlap = 70
+        similarity_top_k = 6
+        rerank_top_n = 6
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-chunks")
+        index = utils.get_vector_store_index(chroma_collection, emd_model_llama)
+        engine = utils.get_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
         # file_set = get_indexed_files("file_set_vn.pickle")    
         # if file_set == None:
         #     file_set = set()
@@ -320,11 +327,6 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
-            elastic_search_file_size = 8
-            chunk_size = 512
-            chunk_overlap = 70
-            similarity_top_k = 6
-            rerank_top_n = 6
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
@@ -356,16 +358,11 @@ def main():
                     titles.append(title)
                     texts.append(text)
                     ids.append(id)
-                if len(titles) == 0:
-                    continue
                  
                 timer = time.time()
-                index = utils.parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap)
+                if len(texts) != 0:
+                    index_chunk = utils.parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap)
                 index_time = time.time()-timer
-                
-                timer = time.time()
-                engine = utils.get_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-                engine_time = time.time()-timer
                 
                 timer = time.time()
                 query_answer = engine.query(question + "Is the statement true or false?")
@@ -392,8 +389,14 @@ def main():
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
 
     elif mode == '-vn':
+        elastic_search_file_size = 8
+        sentence_window_size = 5
+        similarity_top_k = 6
+        rerank_top_n = 3
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-nodes")
+        index = utils.get_vector_store_index(chroma_collection, emd_model_llama)
+        engine = utils.get_sentence_window_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
         # file_set = get_indexed_files("file_set_vn.pickle")    
         # if file_set == None:
         #     file_set = set()
@@ -402,10 +405,6 @@ def main():
             pass
         file_path = sys.argv[2]
         with open(file_path, "r") as file:
-            elastic_search_file_size = 8
-            sentence_window_size = 5
-            similarity_top_k = 6
-            rerank_top_n = 3
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
@@ -437,16 +436,10 @@ def main():
                     titles.append(title)
                     texts.append(text)
                     ids.append(id)
-                if len(titles) == 0:
-                    continue
-                 
                 timer = time.time()
-                index = utils.parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, sentence_window_size)
+                if len(texts) != 0:
+                    index_nodes = utils.parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, sentence_window_size)
                 index_time = time.time()-timer
-                
-                timer = time.time()
-                engine = utils.get_sentence_window_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-                engine_time = time.time()-timer
                 
                 timer = time.time()
                 query_answer = engine.query(question + "Is the statement true or false?")
@@ -464,7 +457,7 @@ def main():
                 
                 with open("log-vn.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
-                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds")    
+                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds")    
             
             with open("result-vn.txt", "a") as result:
                 result.write(f"\n mode: chromaDB |  file: {file_path} | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")

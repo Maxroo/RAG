@@ -41,6 +41,13 @@ def load_chromadb(chroma_collection, titles, texts, ids):
             ids = ids# pages.index.map(str).tolist()
         )
     
+def get_vector_store_index(chroma_collection, emd_model_llama,llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    Settings.llm = llm
+    Settings.embed_model = emd_model_llama
+    index = VectorStoreIndex.from_vector_store(vector_store)
+    return index
+    
 def parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama,llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), chunk_size=512, chunk_overlap=70):
     documents = [Document(text=t) for t in texts]
 
