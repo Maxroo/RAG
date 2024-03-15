@@ -314,7 +314,7 @@ def main():
         chunk_size = 512
         chunk_overlap = 70
         similarity_top_k = 6
-        rerank_top_n = 6
+        rerank_top_n = 3
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-chunks")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama)
@@ -380,7 +380,7 @@ def main():
                 
                 with open("log-vc.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
-                    log.write(f"engine_time took {engine_time} seconds, query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
+                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
             
             with open("result-vc.txt", "a") as result:
                 result.write(f"\n mode: chromaDB |  file: {file_path} | sentence window size: {sentence_window_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
