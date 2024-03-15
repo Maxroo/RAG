@@ -360,7 +360,7 @@ def main():
                     continue
                  
                 timer = time.time()
-                index = utils.parse_chunks_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap)
+                index = utils.parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap)
                 index_time = time.time()-timer
                 
                 timer = time.time()
@@ -441,7 +441,7 @@ def main():
                     continue
                  
                 timer = time.time()
-                index = utils.parse_nodes_return_index(texts, chroma_collection, emd_model_llama, sentence_window_size)
+                index = utils.parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, sentence_window_size)
                 index_time = time.time()-timer
                 
                 timer = time.time()
