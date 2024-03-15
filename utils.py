@@ -91,7 +91,6 @@ def build_sentence_window_index(
 
     return sentence_index
 
-
 def get_sentence_window_query_engine(
     sentence_index,
     similarity_top_k=6,

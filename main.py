@@ -8,6 +8,7 @@ import pickle
 import os
 import sys
 import time
+from transformers import AutoTokenizer
 
 is_insert = False
 mode = ''
@@ -123,6 +124,12 @@ def send_to_openai(question, texts):
     token_usage = res.usage.total_tokens
     return answer, token_usage
 
+def send_to_togetherai(question, texts):
+    answer = utils.togetherai_query(question + " . Is the statement true or false?", texts) 
+    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mixtral-8x7B-Instruct-v0.1")
+    token_usage = len(tokenizer([answer], return_tensors="pt"))
+    return answer, token_usage
+
 def main():
     
     global is_insert 
@@ -193,15 +200,17 @@ def main():
                 context = semintic_search(question, texts)
                 semintic_search_time = time.time()-timer
                 timer = time.time()
-                answer, token_usage = send_to_openai(question, context)
+                # answer, token_usage = send_to_openai(question, context)
+                answer, token_usage = send_to_togetherai(question, context)
                 token_used += token_usage
-                openai_time = time.time()-timer
+                # openai_time = time.time()-timer
+                togetherai_time = time.time()-timer
                 question_count += 1
                 if compare_response(answer, expected):
                     correct += 1        
                 with open("log.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
-                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, TogetherAI took {togetherai_time} seconds\n")
                 with open("result.txt", "w") as result:
                     result.write(f"total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}%\n | took {time.time() - start}")
                     result.write(f"\n Total Token used: {token_used}\n")
