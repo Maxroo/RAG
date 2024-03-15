@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-import openai
+# import openai
 from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
@@ -14,8 +14,8 @@ def get_openai_api_key():
     _ = load_dotenv(find_dotenv())
     return os.getenv("OPENAI_API_KEY")
 
-openai.api_key = get_openai_api_key()
-openai_client = openai.OpenAI(api_key=get_openai_api_key())
+# openai.api_key = get_openai_api_key()
+# openai_client = openai.OpenAI(api_key=get_openai_api_key())
 
 os.environ["TOGETHER_API_KEY"] = "961dc18e6db75ff4cd03bd6f050552cf0a9176ddaca57cf7fed646dc4925d646"
 
@@ -56,7 +56,7 @@ def togetherai_query(question, documents):
     llm = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1",
                       api_key=os.environ["TOGETHER_API_KEY"])
     res = llm.complete(prompt)
-    return res
+    return res.text
 
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
