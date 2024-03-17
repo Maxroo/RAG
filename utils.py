@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-import openai
+# import openai
 from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
