@@ -83,7 +83,7 @@ def get_query_engine(index, similarity_top_k=6, rerank_top_n=2):
 def get_hierarchy_node_query_engine(index,  similarity_top_k=6, rerank_top_n=2):
     base_retriever = index.as_retriever(similarity_top_k=similarity_top_k)
     retriever = AutoMergingRetriever(
-        base_retriever, automerging_index.storage_context, verbose=True
+        base_retriever, index.storage_context, verbose=True
     )
     rerank = SentenceTransformerRerank(
         top_n=rerank_top_n, model="BAAI/bge-reranker-base"
