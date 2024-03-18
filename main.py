@@ -515,7 +515,7 @@ def main():
                  
                 timer = time.time()
                 if len(texts) != 0:
-                    index_nodes = utils.parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, mode = 'h')
+                    index_nodes = utils.parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size)
                 index_time = time.time()-timer
                 
                 timer = time.time()

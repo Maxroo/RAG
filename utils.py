@@ -92,42 +92,44 @@ def get_hierarchy_node_query_engine(index,  similarity_top_k=6, rerank_top_n=2):
         retriever, node_postprocessors=[rerank])
     return query_engine
 
+def parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama,chunksize = [2048, 512, 128], llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+    
+    documents = [Document(text=t) for t in texts]
+    Settings.llm = llm
+    Settings.embed_model = emd_model_llama
+    nodes = node_parser.get_nodes_from_documents(document)
+    leaf_nodes = get_leaf_nodes(nodes)
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    storage_context.docstore.add_documents(nodes)
+    
+    index = VectorStoreIndex(
+        leaf_nodes, storage_context=storage_context
+    )
+    return index
 
 def parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, 
-                                      mode='s',chunksize = [2048, 512, 128],window_size=3, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+                                      window_size=3, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
     documents = [Document(text=t) for t in texts]
     
     
     Settings.llm = llm
     Settings.embed_model = emd_model_llama
-    
-    if mode == 's':  
-        node_parser = SentenceWindowNodeParser.from_defaults(
-            window_size=window_size,
-            window_metadata_key="window",
-            original_text_metadata_key="original_text",
-        )
+    node_parser = SentenceWindowNodeParser.from_defaults(
+        window_size=window_size,
+        window_metadata_key="window",
+        original_text_metadata_key="original_text",
+    )
 
-        nodes = node_parser.get_nodes_from_documents(documents)
-        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        index = VectorStoreIndex(
-            nodes,
-            # service_context=service_context,
-            storage_context=storage_context)
-        return index
-    else:
-        nodes = node_parser.get_nodes_from_documents([document])
-        leaf_nodes = get_leaf_nodes(nodes)
-        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        storage_context.docstore.add_documents(nodes)
-        
-        index = VectorStoreIndex(
-            leaf_nodes, storage_context=storage_context
-        )
-        return index
+    nodes = node_parser.get_nodes_from_documents(documents)
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    index = VectorStoreIndex(
+    nodes,
+    # service_context=service_context,
+    storage_context=storage_context)
+    return index
 
 
 
