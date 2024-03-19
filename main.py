@@ -224,7 +224,7 @@ def main():
                 else:
                     y_true.append(0)
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload, timeout=5)
+                response = rq.get(request, headers=headers, json=payload)
                 timer = time.time()
                 # answer, token_usage = get_response_no_index(question ,response)
                 texts = get_texts_from_response(response)
@@ -290,7 +290,7 @@ def main():
                     y_true.append(0)  
 
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload, timeout=5)
+                response = rq.get(request, headers=headers, json=payload)
                 json_response = response.json()
                 titles = []
                 texts = []
@@ -492,9 +492,7 @@ def main():
                 result.write(f"\n mode: llamaindex, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
-                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
-        save_file_set(file_set, "file_set_vh.pickle")
-
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
