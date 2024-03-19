@@ -12,12 +12,9 @@ from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.indices.loading import load_index_from_storage
 from llama_index.llms.openai import OpenAI
-from FlagEmbedding import FlagReranker
 from llama_index.core.retrievers import AutoMergingRetriever
 from llama_index.core.node_parser import get_leaf_nodes
 from llama_index.core.node_parser import HierarchicalNodeParser
-
-
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import chromadb.utils.embedding_functions as embedding_functions
@@ -92,12 +89,13 @@ def get_hierarchy_node_query_engine(index,  similarity_top_k=6, rerank_top_n=2):
         retriever, node_postprocessors=[rerank])
     return query_engine
 
-def parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama,chunksize = [2048, 512, 128], llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
+def parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama,chunk_size = [2048, 512, 128], llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
     
     documents = [Document(text=t) for t in texts]
     Settings.llm = llm
     Settings.embed_model = emd_model_llama
-    nodes = node_parser.get_nodes_from_documents(document)
+    node_parser = HierarchicalNodeParser.from_defaults(chunk_sizes=chunk_size)
+    nodes = node_parser.get_nodes_from_documents(documents)
     leaf_nodes = get_leaf_nodes(nodes)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
@@ -112,8 +110,6 @@ def parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_mo
 def parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, 
                                       window_size=3, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1)):
     documents = [Document(text=t) for t in texts]
-    
-    
     Settings.llm = llm
     Settings.embed_model = emd_model_llama
     node_parser = SentenceWindowNodeParser.from_defaults(
@@ -130,7 +126,6 @@ def parse_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama,
     # service_context=service_context,
     storage_context=storage_context)
     return index
-
 
 
 def get_openai_api_key():
@@ -227,7 +222,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize
 import numpy as np
-from FlagEmbedding import FlagReranker
 import re 
 from split_string import split_string_with_limit
 import tiktoken
