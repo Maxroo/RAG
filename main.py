@@ -448,7 +448,6 @@ def main():
                 timer = time.time()
                 if len(texts) != 0:
                     index_nodes = utils.parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, llm = LLM)
-                    engine = utils.get_hierarchy_node_query_engine(index_nodes, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
                 index_time = time.time()-timer
                 
                 timer = time.time()
