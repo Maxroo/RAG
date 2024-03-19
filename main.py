@@ -405,13 +405,9 @@ def main():
         similarity_top_k = 6
         rerank_top_n = 3
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
-        print("chromaDB")
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-hierarchy")
-        print("index")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
-        print("engine")
         engine = utils.get_hierarchy_node_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-        print("file_set")
         file_set = set()
         with open("log-vh.txt", "w"):
             pass
@@ -452,6 +448,7 @@ def main():
                 timer = time.time()
                 if len(texts) != 0:
                     index_nodes = utils.parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, llm = LLM)
+                    engine = utils.get_hierarchy_node_query_engine(index_nodes, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
                 index_time = time.time()-timer
                 
                 timer = time.time()
