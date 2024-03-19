@@ -1,5 +1,5 @@
 from pathlib import Path
-# import pickle
+import pickle
 # import os
 import json
 import sys
@@ -13,6 +13,19 @@ import utils
 CONFIG = None
 LLM = None
 mode = ''
+
+def get_file_set(filename):
+    try:
+        with open(filename, 'rb') as handle:
+            file = pickle.load(handle)
+        return file
+    except IOError as e:
+        print(f"Couldn't read to file indexed_files.pickle")
+        return None
+    
+def save_file_set(file, filename):
+    with open(filename, 'wb') as handle:
+        pickle.dump(file, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -254,8 +267,10 @@ def main():
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-chunks")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
         engine = utils.get_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-
-        file_set = set()
+        file_set = get_file_set("file_set_vc.pickle")    
+        if file_set == None:
+            file_set = set()
+        # file_set = set()
         with open("log-vc.txt", "w"):
             pass
         file_path = sys.argv[2]
@@ -320,6 +335,7 @@ def main():
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
+        save_file_set(file_set, "file_set_vc.pickle")
 
     elif mode == '-vn':
         elastic_search_file_size = 8
@@ -330,10 +346,10 @@ def main():
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-nodes")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
         engine = utils.get_sentence_window_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-        # file_set = get_indexed_files("file_set_vn.pickle")    
-        # if file_set == None:
-        #     file_set = set()
-        file_set = set()
+        file_set = get_file_set("file_set_vn.pickle")    
+        if file_set == None:
+            file_set = set()
+        # file_set = set()
         with open("log-vn.txt", "w"):
             pass
         file_path = sys.argv[2]
@@ -397,7 +413,7 @@ def main():
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
-        # save_indexed_files(file_set, "file_set_vn.pickle")
+        save_file_set(file_set, "file_set_vn.pickle")
 
     elif mode == '-vh':
         elastic_search_file_size = 8
@@ -408,7 +424,10 @@ def main():
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-hierarchy")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
         engine = utils.get_hierarchy_node_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-        file_set = set()
+        file_set = get_file_set("file_set_vh.pickle")    
+        if file_set == None:
+            file_set = set()
+        # file_set = set()
         with open("log-vh.txt", "w"):
             pass
         file_path = sys.argv[2]
@@ -473,6 +492,7 @@ def main():
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
+        save_file_set(file_set, "file_set_vh.pickle")
 
 
     else:
