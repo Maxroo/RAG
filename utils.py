@@ -20,6 +20,8 @@ from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import chromadb.utils.embedding_functions as embedding_functions
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core.storage.docstore import SimpleDocumentStore
+
 
 import pandas as pd
 
