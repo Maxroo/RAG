@@ -105,8 +105,9 @@ def main():
     inference_time = 0
     if len(sys.argv) > 2:
         mode = sys.argv[1]
-
-    elif mode == '-m':
+    print(f"Mode: {mode}")
+    
+    if mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
             arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
