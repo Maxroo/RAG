@@ -167,6 +167,11 @@ def openai_query(question, documents):
     # print(f"Response: {res}") # for debugging
     return res
 
+def togetherai_query(question, documents, llm):
+    prompt = construct_prompt(question, documents)
+    res = llm.complete(prompt)
+    return res.text
+
 def build_sentence_window_index(
     documents, llm=OpenAI(model="gpt-3.5-turbo", temperature=0.1), 
     embed_model="BAAI/bge-small-en-v1.5", save_dir="./index/sentence_index_default", insert=False
