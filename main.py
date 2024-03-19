@@ -11,25 +11,8 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import utils
 
 CONFIG = None
-
-with open('config.json', encoding='utf-8') as f:
-    CONFIG = json.load(f)
-
-if CONFIG is None:
-    print("Couldn't read config.json")
-    exit()
-
-mode = ''
-
 LLM = None
-if CONFIG['global']['is_openAI']:
-    LLM = OpenAI(model=CONFIG['global']['openAI'], temperature=0.1)
-else:
-    LLM = TogetherLLM(model=CONFIG['global']['together'], temperature=0.1, api_key=CONFIG['api_keys']['TOGETHER_API_KEY'])
-
-if LLM is None:
-    print("Couldn't initialize LLM")
-    exit()
+mode = ''
 
 def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -92,8 +75,26 @@ def send_to_together(question, texts):
     return res
 
 def main():
-
+    global CONFIG
+    global LLM
     global mode
+    
+    with open('config.json', encoding='utf-8') as f:
+        CONFIG = json.load(f)
+
+    if CONFIG is None:
+        print("Couldn't read config.json")
+        exit()
+        
+    if CONFIG['global']['is_openAI']:
+        LLM = OpenAI(model=CONFIG['global']['openAI'], temperature=0.1)
+    else:
+        LLM = TogetherLLM(model=CONFIG['global']['together'], temperature=0.1, api_key=CONFIG['api_keys']['TOGETHER_API_KEY'])
+
+    if LLM is None:
+        print("Couldn't initialize LLM")
+        exit()
+    
     token_used = 0
     start = time.time()
     question_count = 0
@@ -403,6 +404,7 @@ def main():
         similarity_top_k = 6
         rerank_top_n = 3
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
+        print("chromaDB")
         chroma_client, chroma_collection = utils.setup_chromadb("enwiki-hierarchy")
         print("index")
         index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
