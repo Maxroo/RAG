@@ -421,12 +421,12 @@ def main():
         similarity_top_k = 6
         rerank_top_n = 3
         emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
-        chroma_client, chroma_collection = utils.setup_chromadb("enwiki-hierarchy")
-        index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
-        engine = utils.get_hierarchy_node_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
-        file_set = get_file_set("file_set_vh.pickle")    
-        if file_set == None:
-            file_set = set()
+        # chroma_client, chroma_collection = utils.setup_chromadb("enwiki-hierarchy")
+        # index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
+        # engine = utils.get_hierarchy_node_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
+        # file_set = get_file_set("file_set_vh.pickle")    
+        # if file_set == None:
+        #     file_set = set()
         # file_set = set()
         with open("log-vh.txt", "w"):
             pass
@@ -467,6 +467,7 @@ def main():
                 timer = time.time()
                 if len(texts) != 0:
                     index_nodes = utils.parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, llm = LLM)
+                    engine = utils.get_hierarchy_node_query_engine(index_nodes, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
                 index_time = time.time()-timer
                 
                 timer = time.time()
@@ -488,7 +489,7 @@ def main():
                     log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
             
             with open("result-vh.txt", "a") as result:
-                result.write(f"\n mode: chromaDB, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n mode: llamaindex, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")

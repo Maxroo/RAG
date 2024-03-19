@@ -99,9 +99,10 @@ def parse_hierarchy_nodes_chromadb_return_index(texts, chroma_collection, emd_mo
     node_parser = HierarchicalNodeParser.from_defaults(chunk_sizes=chunk_size)
     nodes = node_parser.get_nodes_from_documents(documents)
     leaf_nodes = get_leaf_nodes(nodes)
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    # vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     docstore = SimpleDocumentStore()
-    storage_context = StorageContext.from_defaults(vector_store=vector_store, docstore=docstore)
+    # storage_context = StorageContext.from_defaults(vector_store=vector_store, docstore=docstore)
+    storage_context = StorageContext.from_defaults(docstore=docstore)
     storage_context.docstore.add_documents(nodes)
     
     index = VectorStoreIndex(
