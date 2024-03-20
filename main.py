@@ -9,6 +9,7 @@ from sklearn.metrics import classification_report
 from llama_index.llms.together import TogetherLLM
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import utils
+import pandas as pd
 
 CONFIG = None
 LLM = None
@@ -490,6 +491,73 @@ def main():
             
             with open("result-vh.txt", "a") as result:
                 result.write(f"\n mode: llamaindex, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
+
+    elif mode == '-vhf':
+        file_path = sys.argv[2]
+        files = file_path.split()
+        elastic_search_file_size = 8
+        chunk_size = [2048, 512, 128]
+        similarity_top_k = 6
+        rerank_top_n = 3
+        for file_name in files:
+            with open("log-vhf.txt", "w"):
+                pass
+            df = pd.read_csv(file_name)
+            y_true = []
+            y_pred = []
+            for i, data_sample in df.iterrows():
+                expect=data_sample['label'],
+                claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
+                question=data_sample["claim"]  # original claim
+                y_true.append(int(expect))
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload, timeout=5)
+                json_response = response.json()
+                titles = []
+                texts = []
+                ids = []
+                for hit in json_response['hits']['hits']:
+                    source = hit['_source']
+                    title = source.get('title', 'N/A')
+                    text = source.get('text', 'N/A')
+                    id = str(source.get('page_id', 'N/A'))
+                    if id in file_set:
+                        continue
+                    file_set.add(id)
+                    titles.append(title)
+                    texts.append(text)
+                    ids.append(id)
+
+                timer = time.time()
+                if len(texts) != 0:
+                    emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
+                    index = utils.parse_hierarchy_nodes_chromadb_return_index(texts, None, emd_model_llama, chunk_size = chunk_size, llm = LLM)
+                    engine = utils.get_hierarchy_node_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
+                index_time = time.time()-timer
+
+                timer = time.time()
+                query_answer = engine.query(claim + "Is the statement true or false?")
+                query_time = time.time()-timer
+
+                answer = query_answer.response
+                if compare_response(answer, expected):
+                    correct += 1
+                question_count += 1
+
+                if 'true' in answer.lower():
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+
+                with open("log-vhf.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")
+
+            with open("result-vhf.txt", "a") as result:
+                result.write(f"\n mode: chromaDB, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
