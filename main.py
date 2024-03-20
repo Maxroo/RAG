@@ -535,7 +535,7 @@ def main():
                 claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
                 question=data_sample["claim"]  # original claim
                 # print(expect)
-                y_true.append(int(expect)[0])
+                y_true.append(int(expect[0]))
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
                 response = rq.get(request, headers=headers, json=payload)
                 json_response = response.json()
