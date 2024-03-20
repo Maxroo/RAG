@@ -563,9 +563,9 @@ def main():
                 query_time = time.time()-timer
 
                 answer = query_answer.response
-                if compare_response(answer, expected):
-                    correct += 1
-                question_count += 1
+                # if compare_response(answer, expected):
+                #     correct += 1
+                # question_count += 1
 
                 if check_true_false_order(answer):
                     y_pred.append(1)
@@ -573,13 +573,13 @@ def main():
                     y_pred.append(0)
 
                 with open("log-vhf.txt", "a") as log:
-                    log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"Question: {question} | Expected: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
                     log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")
 
             with open("result-vhf.txt", "a") as result:
                 result.write(f"\n mode: chromaDB, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
-                result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     else:
