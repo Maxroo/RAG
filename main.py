@@ -129,7 +129,7 @@ def main():
         question = arg_question
         timer = time.time()
         request, headers, payload = construct_request(question)
-        response = rq.get(request, headers=headers, json=payload, timeout=5)
+        response = rq.get(request, headers=headers, json=payload)
         texts = get_texts_from_response(response)
         context = semintic_search(question, texts)
         semintic_search_time = time.time()-timer
@@ -146,7 +146,7 @@ def main():
         print(f"Question: {arg_question}")
         question = arg_question
         request, headers, payload = construct_request(question, 3)
-        response = rq.get(request, headers=headers, json=payload, timeout=5)
+        response = rq.get(request, headers=headers, json=payload)
         timer = time.time()
         texts = get_texts_from_response(response)
         relevant_context = semintic_search(question, texts)
@@ -163,7 +163,7 @@ def main():
         print(f"Question: {arg_question}")
         question = arg_question
         request, headers, payload = construct_request(question, 3)
-        response = rq.get(request, headers=headers, json=payload, timeout=5)
+        response = rq.get(request, headers=headers, json=payload)
         json_response = response.json()
         for hit in json_response['hits']['hits']:
             source = hit['_source']
@@ -177,7 +177,7 @@ def main():
         print(f"Question: {arg_question}")
         question = arg_question
         request, headers, payload = construct_request(question, 3)
-        response = rq.get(request, headers=headers, json=payload, timeout=5)
+        response = rq.get(request, headers=headers, json=payload)
         json_response = response.json()
         titles = []
         texts = []
@@ -370,7 +370,7 @@ def main():
                     y_true.append(0)  
                     
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload, timeout=5)   
+                response = rq.get(request, headers=headers, json=payload)   
                 json_response = response.json()
                 titles = []
                 texts = []
@@ -448,7 +448,7 @@ def main():
                     y_true.append(0)  
                     
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload, timeout=5)
+                response = rq.get(request, headers=headers, json=payload)
                 json_response = response.json()
                 titles = []
                 texts = []
@@ -514,7 +514,7 @@ def main():
                 question=data_sample["claim"]  # original claim
                 y_true.append(int(expect))
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
-                response = rq.get(request, headers=headers, json=payload, timeout=5)
+                response = rq.get(request, headers=headers, json=payload)
                 json_response = response.json()
                 titles = []
                 texts = []
