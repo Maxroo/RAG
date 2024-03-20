@@ -15,6 +15,11 @@ CONFIG = None
 LLM = None
 mode = ''
 
+ELASTIC_SEARCH_FILE_SIZE = 8
+
+if len(sys.argv) > 3:
+    ELASTIC_SEARCH_FILE_SIZE = int(sys.argv[3])
+
 def get_file_set(filename):
     try:
         with open(filename, 'rb') as handle:
@@ -228,7 +233,7 @@ def main():
         with open(file_path, "r") as file:
             top_x = 16
             chunk_length = 256
-            elastic_search_file_size = 8
+            elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
@@ -276,7 +281,7 @@ def main():
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     elif mode == '-vc':
-        elastic_search_file_size = 8
+        elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
         chunk_size = 512
         chunk_overlap = 70
         similarity_top_k = 6
@@ -356,7 +361,7 @@ def main():
         save_file_set(file_set, "file_set_vc.pickle")
 
     elif mode == '-vn':
-        elastic_search_file_size = 8
+        elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
         sentence_window_size = 5
         similarity_top_k = 6
         rerank_top_n = 3
@@ -434,7 +439,7 @@ def main():
         save_file_set(file_set, "file_set_vn.pickle")
 
     elif mode == '-vh':
-        elastic_search_file_size = 8
+        elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
         chunk_size = [2048, 512, 128]
         similarity_top_k = 6
         rerank_top_n = 3
@@ -458,12 +463,12 @@ def main():
                 question_timer = time.time()
                 question = statement['claim']
                 expected = statement['label']
-                
+
                 if 'supports' in expected.lower():
                     y_true.append(1)
                 else:
-                    y_true.append(0)  
-                    
+                    y_true.append(0)
+
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
                 response = rq.get(request, headers=headers, json=payload)
                 json_response = response.json()
@@ -514,7 +519,7 @@ def main():
 
     elif mode == '-vhf':
         file_path = sys.argv[2]
-        elastic_search_file_size = 8
+        elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
         files = file_path.split()
         chunk_size = [2048, 512, 128]
         similarity_top_k = 6
