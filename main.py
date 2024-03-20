@@ -88,6 +88,23 @@ def send_to_together(question, texts):
     res = utils.togetherai_query(question + " . Is the statement true or false?", texts, llm = LLM)
     return res
 
+def check_true_false_order(string):
+    # Split the string into words
+    words = string.lower().split()
+    # Check if "True" or "False" comes first
+    if "true" in words and "false" in words:
+        if words.index("true") < words.index("false"):
+            return True
+        else:
+            return False
+    elif "true" in words:
+        return True
+    elif "false" in words:
+        return False
+    else:
+        return False
+
+
 def main():
     global CONFIG
     global LLM
@@ -322,7 +339,7 @@ def main():
                     correct += 1 
                 question_count += 1
                 
-                if 'true' in answer.lower():
+                if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
@@ -400,7 +417,7 @@ def main():
                     correct += 1 
                 question_count += 1
                 
-                if 'true' in answer.lower():
+                if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
@@ -480,7 +497,7 @@ def main():
                     correct += 1 
                 question_count += 1
                 
-                if 'true' in answer.lower():
+                if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
@@ -497,8 +514,8 @@ def main():
 
     elif mode == '-vhf':
         file_path = sys.argv[2]
-        files = file_path.split()
         elastic_search_file_size = 8
+        files = file_path.split()
         chunk_size = [2048, 512, 128]
         similarity_top_k = 6
         rerank_top_n = 3
@@ -547,7 +564,7 @@ def main():
                     correct += 1
                 question_count += 1
 
-                if 'true' in answer.lower():
+                if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
