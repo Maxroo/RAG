@@ -530,7 +530,9 @@ def main():
             df = pd.read_csv(file_name)
             y_true = []
             y_pred = []
+            start = time.time()
             for i, data_sample in df.iterrows():
+                question_timer = time.time()
                 expect=data_sample['label'],
                 claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
                 question=data_sample["claim"]  # original claim
