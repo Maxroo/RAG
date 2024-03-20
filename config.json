@@ -1,0 +1,11 @@
+
+{
+    "global": {
+        "is_openAI" : false,
+        "openAI": "gpt-3.5-turbo" ,
+        "together": "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    },
+    "api_keys":{
+        "TOGETHER_API_KEY": "961dc18e6db75ff4cd03bd6f050552cf0a9176ddaca57cf7fed646dc4925d646"
+    }
+}
