@@ -584,9 +584,67 @@ def main():
                 result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
+    elif mode == '-ff':
+        with open("log.txt", "w"):
+            pass
+        file_path = sys.argv[2]
+        files = file_path.split()
+        for file_name in files:
+            with open("log-vhf.txt", "w"):
+                pass
+            file = pd.read_csv(file_name)
+            top_x = 16
+            chunk_length = 256
+            elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            start = time.time()
+            for i, data_sample in file.iterrows():
+                question_timer = time.time()
+                expect=data_sample['label'],
+                claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
+                question=data_sample["claim"]  # original claim
+                # print(expect)
+                y_true.append(int(expect[0]))
+
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload)
+                timer = time.time()
+                # answer, token_usage = get_response_no_index(question ,response)
+                texts = get_texts_from_response(response)
+                context = semintic_search(question, texts)
+                semintic_search_time = time.time()-timer
+                timer = time.time()
+                answer = None
+                if CONFIG['global']['is_openAI']:
+                    answer, token_usage = send_to_openai(claim, context)
+                else:
+                    answer = send_to_together(claim, context)
+                    token_usage = 0 # not keep in track of token usage for togetherAI
+                token_used += token_usage
+                openai_time = time.time()-timer
+                question_count += 1
+                if compare_response(answer, expected):
+                    correct += 1
+
+                if check_true_false_order(answer):
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | xpected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
+            with open("result.txt", "a") as result:
+                result.write(f"\nCheap RAG file: {file_path} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write("\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
+
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
-        return        
+        return
 
 if __name__ == "__main__":
     main()
