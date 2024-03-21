@@ -625,17 +625,14 @@ def main():
                 token_used += token_usage
                 openai_time = time.time()-timer
                 question_count += 1
-                if compare_response(answer, expected):
-                    correct += 1
-
                 if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
 
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | xpected: {expected} | Answer: {answer} | Token_usage: {token_usage} | Took: {time.time() - question_timer} |")
-                    log.write(f"Semintic search took {semintic_search_time} seconds, OpenAI took {openai_time} seconds\n")
+                    log.write(f"Question: {question} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"Semintic search took {semintic_search_time} seconds, Query took {openai_time} seconds\n")
             with open("result.txt", "a") as result:
                 result.write(f"\nCheap RAG file: {file_path} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
