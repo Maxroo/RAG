@@ -14,11 +14,9 @@ import pandas as pd
 CONFIG = None
 LLM = None
 mode = ''
+is_openAI = false
 
 ELASTIC_SEARCH_FILE_SIZE = 8
-
-if len(sys.argv) > 3:
-    ELASTIC_SEARCH_FILE_SIZE = int(sys.argv[3])
 
 def get_file_set(filename):
     try:
@@ -114,6 +112,8 @@ def main():
     global CONFIG
     global LLM
     global mode
+    global is_openAI
+    global ELASTIC_SEARCH_FILE_SIZE
     
     with open('config.json', encoding='utf-8') as f:
         CONFIG = json.load(f)
@@ -121,8 +121,25 @@ def main():
     if CONFIG is None:
         print("Couldn't read config.json")
         exit()
+    is_openAI = CONFIG['global']['is_openAI']
+    argvs = sys.argv[3:]
+    for arg in argvs:
+        if arg.lower().startswith("is_openai="):
+            value = arg.split("=")[1]
+            if value.lower() == "true":
+                is_openAI = True
+            elif value.lower() == "false":
+                is_openAI = False
+        elif arg.startswith("elastic_size="):
+            value = arg.split("=")[1]
+            try:
+                size = int(value)
+                ELASTIC_SEARCH_FILE_SIZE = size
+            except ValueError:
+                print("Invalid value for elastic_size, must be an integer")
+                pass    
         
-    if CONFIG['global']['is_openAI']:
+    if is_openAI:
         LLM = OpenAI(model=CONFIG['global']['openAI'], temperature=0.1)
     else:
         LLM = TogetherLLM(model=CONFIG['global']['together'], temperature=0.1, api_key=CONFIG['api_keys']['TOGETHER_API_KEY'])
@@ -359,6 +376,84 @@ def main():
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
         save_file_set(file_set, "file_set_vc.pickle")
+        
+    elif mode == '-vcf':
+        file_path = sys.argv[2]
+        files = file_path.split()
+        for file_name in files:
+            with open("log-vcf.txt", "w"):
+                pass
+            file = pd.read_csv(file_name)
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            start = time.time()
+            for i, data_sample in file.iterrows():
+                question_timer = time.time()
+                expect=data_sample['label'],
+                claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
+                question=data_sample["claim"]  # original claim
+                # print(expect)
+                y_true.append(int(expect[0]))
+
+                elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
+                chunk_size = 512
+                chunk_overlap = 70
+                similarity_top_k = 6
+                rerank_top_n = 3
+                emd_model_llama = HuggingFaceEmbedding(model_name=utils.EMD_MODEL_NAME)
+                chroma_client, chroma_collection = utils.setup_chromadb("enwiki-chunks")
+                index = utils.get_vector_store_index(chroma_collection, emd_model_llama, llm = LLM)
+                engine = utils.get_query_engine(index, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
+                file_set = get_file_set("file_set_vc.pickle")    
+                if file_set == None:
+                    file_set = set()
+                # file_set = set()
+                request, headers, payload = construct_request(question, size = elastic_search_file_size)
+                response = rq.get(request, headers=headers, json=payload)
+                json_response = response.json()
+                titles = []
+                texts = []
+                ids = []
+                for hit in json_response['hits']['hits']:
+                    source = hit['_source']
+                    title = source.get('title', 'N/A')
+                    text = source.get('text', 'N/A')
+                    id = str(source.get('page_id', 'N/A'))
+                    if id in file_set:
+                        continue
+                    file_set.add(id)
+                    titles.append(title)
+                    texts.append(text)
+                    ids.append(id)
+                 
+                timer = time.time()
+                if len(texts) != 0:
+                    index_chunk = utils.parse_chunks_chromadb_return_index(texts, chroma_collection, emd_model_llama, chunk_size = chunk_size, chunk_overlap = chunk_overlap, llm = LLM)
+                index_time = time.time()-timer
+                
+                timer = time.time()
+                query_answer = engine.query(claim + "Is it true or false?")
+                query_time = time.time()-timer
+                
+                answer = query_answer.response
+                question_count += 1
+                
+                if check_true_false_order(answer):
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+                
+                with open("log-vc.txt", "a") as log:
+                    log.write(f"Question: {question} | Expected: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
+            
+            with open("result-vc.txt", "a") as result:
+                result.write(f"\n mode: chromaDB |  file: {file_name} | chunk_size: {chunk_size} | chunk_overlap: {chunk_overlap} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
+                result.write("\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred, target_names=['refutes', 'supports'])}")
+            save_file_set(file_set, "file_set_vc.pickle")
 
     elif mode == '-vn':
         elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
@@ -634,7 +729,7 @@ def main():
                     log.write(f"Question: {question} | Answer: {answer} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, Query took {openai_time} seconds\n")
             with open("result.txt", "a") as result:
-                result.write(f"\nCheap RAG file: {file_path} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write(f"\nCheap RAG file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
