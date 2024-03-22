@@ -388,6 +388,7 @@ def main():
             y_true = []
             y_pred = []
             start = time.time()
+            question_count = 0
             for i, data_sample in file.iterrows():
                 question_timer = time.time()
                 expect=data_sample['label'],
@@ -691,6 +692,7 @@ def main():
             top_x = 16
             chunk_length = 256
             elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
+            question_count = 0
             # maximum token openAI 3.5 can handle is 4096
             y_true = []
             y_pred = []
@@ -726,7 +728,7 @@ def main():
                     y_pred.append(0)
 
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
                     log.write(f"Semintic search took {semintic_search_time} seconds, Query took {openai_time} seconds\n")
             with open("result.txt", "a") as result:
                 result.write(f"\nCheap RAG file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
