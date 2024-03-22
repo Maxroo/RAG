@@ -12,6 +12,8 @@ from transformers import AutoTokenizer
 
 is_insert = False
 mode = ''
+# togetherai_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+togetherai_model = "togethercomputer/llama-2-70b-chat"
 
 def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -78,12 +80,12 @@ def index_document(page_id, text):
         index_file_set = set()
     if page_id in index_file_set:
         # index = utils.build_sentence_window_index(Documents)
-        index = utils.build_sentence_window_index(Documents, llm = "mistralai/Mixtral-8x7B-Instruct-v0.1")
+        index = utils.build_sentence_window_index(Documents, llm = togetherai_model)
     else:
         global is_insert 
         is_insert = True
         # index = utils.build_sentence_window_index(Documents, insert = True)
-        index = utils.build_sentence_window_index(Documents, llm = "mistralai/Mixtral-8x7B-Instruct-v0.1", insert = True)
+        index = utils.build_sentence_window_index(Documents, llm = togetherai_model, insert = True)
         index_file_set.add(page_id)
         save_indexed_files(index_file_set)
     return index
@@ -127,7 +129,7 @@ def send_to_openai(question, texts):
 
 def send_to_togetherai(question, texts):
     answer = utils.togetherai_query(question + " . Is the statement true or false?", texts) 
-    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mixtral-8x7B-Instruct-v0.1")
+    tokenizer = AutoTokenizer.from_pretrained(togetherai_model)
     token_usage = len(tokenizer([answer], return_tensors="pt"))
     return answer, token_usage
 

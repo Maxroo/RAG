@@ -18,6 +18,8 @@ def get_openai_api_key():
 # openai_client = openai.OpenAI(api_key=get_openai_api_key())
 
 os.environ["TOGETHER_API_KEY"] = "961dc18e6db75ff4cd03bd6f050552cf0a9176ddaca57cf7fed646dc4925d646"
+# togetherai_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+togetherai_model = "togethercomputer/llama-2-70b-chat"
 
 def construct_prompt(question, documents):
     prompt_start = (
@@ -26,13 +28,17 @@ def construct_prompt(question, documents):
     )
 
     prompt_end = (
-        f"\n\nQuestion: {question}\nAnswer:"
+        f"\n\nQuestion: {question}\nAnswer: "
     )
 
     prompt = (
         prompt_start + "\n\n---\n\n".join(documents) + 
         prompt_end
     )
+
+    # Costomize the prompt for Llama2-70b
+    prompt = "<s>[INST]" + prompt + "[/INST]"
+    
     return prompt
 
 def openai_query(question, documents):
@@ -53,7 +59,7 @@ def openai_query(question, documents):
 
 def togetherai_query(question, documents):
     prompt = construct_prompt(question, documents)
-    llm = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+    llm = TogetherLLM(model=togetherai_model,
                       api_key=os.environ["TOGETHER_API_KEY"])
     res = llm.complete(prompt)
     return res.text
