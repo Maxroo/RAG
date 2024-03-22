@@ -159,7 +159,7 @@ def main():
     if len(sys.argv) > 2:
         mode = sys.argv[1]
     print(f"Mode: {mode}")
-    
+    print(f"is_OpenAI: {is_openAI}")
     if mode == '-m':
         arg_question = sys.argv[2]
         if(arg_question == "test"):
