@@ -8,6 +8,8 @@ import requests as rq
 from sklearn.metrics import classification_report
 from llama_index.llms.together import TogetherLLM
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.openai import OpenAI
+import openai
 import utils
 import pandas as pd
 
