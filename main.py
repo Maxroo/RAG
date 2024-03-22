@@ -14,7 +14,7 @@ import pandas as pd
 CONFIG = None
 LLM = None
 mode = ''
-is_openAI = false
+is_openAI = False
 
 ELASTIC_SEARCH_FILE_SIZE = 8
 
