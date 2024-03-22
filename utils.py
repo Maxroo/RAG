@@ -17,9 +17,14 @@ def get_openai_api_key():
 # openai.api_key = get_openai_api_key()
 # openai_client = openai.OpenAI(api_key=get_openai_api_key())
 
-os.environ["TOGETHER_API_KEY"] = "961dc18e6db75ff4cd03bd6f050552cf0a9176ddaca57cf7fed646dc4925d646"
+def get_togetherai_api_key():
+    _ = load_dotenv(find_dotenv())
+    return os.getenv("TOGETHER_API_KEY")
+
+os.environ["TOGETHER_API_KEY"] = get_togetherai_api_key()
+
 # togetherai_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
-togetherai_model = "togethercomputer/llama-2-70b-chat"
+togetherai_model = "meta-llama/Llama-2-70b-chat-hf"
 
 def construct_prompt(question, documents):
     prompt_start = (

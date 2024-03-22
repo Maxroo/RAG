@@ -13,7 +13,7 @@ from transformers import AutoTokenizer
 is_insert = False
 mode = ''
 # togetherai_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
-togetherai_model = "togethercomputer/llama-2-70b-chat"
+togetherai_model = "meta-llama/Llama-2-70b-chat-hf"
 
 def construct_request(question, size = 2):
     request = "http://localhost:9200/enwiki/_search?pretty"
@@ -129,7 +129,7 @@ def send_to_openai(question, texts):
 
 def send_to_togetherai(question, texts):
     answer = utils.togetherai_query(question + " . Is the statement true or false?", texts) 
-    tokenizer = AutoTokenizer.from_pretrained(togetherai_model)
+    tokenizer = AutoTokenizer.from_pretrained(togetherai_model, token=os.environ["HUGGINGFACE_ACCESS_TOKEN"])
     token_usage = len(tokenizer([answer], return_tensors="pt"))
     return answer, token_usage
 
