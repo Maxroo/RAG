@@ -25,8 +25,8 @@ def process_model_generation(s):
 def read_log():
     with open("log.txt", "r") as f:
         lines = f.readlines()
-    # If line doesn't start with "Questions: ", merge it with previous line
-    for i in range(len(lines)-1, 1, -1):
+    # If line doesn't start with "Question: ", merge it with previous line
+    for i in range(len(lines)-1, 0, -1):
         if not lines[i].startswith("Question: "):
             lines[i-1] = lines[i-1].strip() + " " + lines[i].strip()
             lines[i] = ""
@@ -34,7 +34,7 @@ def read_log():
     expected = []
     answer = []
     for line in lines:
-        # if (not line.startswith("Questions: ")) or ("Expected: " not in line) or ("Answer: " not in line):
+        # if (not line.startswith("Question: ")) or ("Expected: " not in line) or ("Answer: " not in line):
         #     print("Invalid line: " + line)
         #     continue
         e = line.split("Expected: ")[1].split("|")[0]
