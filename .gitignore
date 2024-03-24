@@ -1,3 +1,6 @@
 /__pycache__/
 /index/
 .env
+log.txt
+result.txt
+'result(2).txt'

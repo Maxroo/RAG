@@ -84,7 +84,7 @@ def build_sentence_window_index(
         embed_model=embed_model,
         node_parser=node_parser,
     )
-    
+
     if not os.path.exists(save_dir):
         sentence_index = VectorStoreIndex.from_documents(
             documents, service_context=sentence_context
@@ -97,7 +97,7 @@ def build_sentence_window_index(
         )
         if(insert):
             for doc in documents:
-                sentence_index.insert(doc, service_context=sentence_context)            
+                sentence_index.insert(doc, service_context=sentence_context)
             sentence_index.storage_context.persist(persist_dir=save_dir)
 
     return sentence_index
@@ -124,8 +124,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize
 import numpy as np
 # from FlagEmbedding import FlagReranker
-import re 
+import re
+from split_string import split_string_with_limit
+import tiktoken
 
+# if token_length + len(sentence.split()) > max_token_length and len(current_sentence.split()) > 256,
+# this function appends a chunk larger than 256 tokens in result list.
 def custom_sent_tokenize(text, max_token_length=256):
     sentences = re.split(r'(?<=[.!?])\s+', text)
     token_length = 0
@@ -141,12 +145,20 @@ def custom_sent_tokenize(text, max_token_length=256):
             token_length = len(sentence.split())
     if current_sentence:
         result.append(current_sentence.strip())
+
     return result
+
+def chunked_tokens(text, encoding_name, chunk_length):
+    encoding = tiktoken.get_encoding(encoding_name)
+    texts = split_string_with_limit(text, chunk_length, encoding)
+    return texts
 
 def retrieve_context_from_texts(texts, question, top_x = 6):
     # Tokenize question and texts into sentences
     question_sentences = sent_tokenize(question)
-    text_sentences = [custom_sent_tokenize(text, ) for text in texts]
+    # text_sentences = [custom_sent_tokenize(text, ) for text in texts]
+    text_sentences = [chunked_tokens(text,"cl100k_base", 256) for text in texts]
+
     # Flatten list of text sentences
     flat_text_sentences = [sentence for sublist in text_sentences for sentence in sublist]
     # Compute TF-IDF vectors for question and text sentences
