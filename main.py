@@ -777,7 +777,12 @@ def main():
                     file.to_csv(file_name, index=False)
                 else:
                     print("decomposed exist")
-                    answer = data_sample["decomposed_questions_" + LLM.model]
+                    # answer = data_sample["decomposed_questions_" + LLM.model]
+                    split_prompt = "can you decomposition the following question in one string without newline and add ** at the end of each decompositioned question?"
+                    res = LLM.complete(split_prompt + "\n" + question)
+                    answer = res.text
+                    data_sample["decomposed_questions_" + LLM.model] = answer
+                    file.to_csv(file_name, index=False)
                 print(answer)
                 question_list = split_string_with_number_and_double_asterisks(answer)
                 print(question_list)
