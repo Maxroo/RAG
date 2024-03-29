@@ -840,8 +840,7 @@ def main():
                 question=data_sample["claim"]  # original claim
                 # print(expect)
                 y_true.append(int(expect[0]))
-                split_prompt = "Provide a better search query for web search engine to answer the given question, end \
-                    the queries with double asterisks. Question: {question} \n Answer:"
+                split_prompt = "Provide a better search query for web search engine to answer the given question, end the queries with double asterisks. Question: {question} \n Answer:"
                 print("prompt: " + split_prompt)
                 res = LLM.complete(split_prompt)
                 answer = res.text
