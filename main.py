@@ -768,11 +768,13 @@ def main():
                 # print(expect)
                 y_true.append(int(expect[0]))
                 if not data_sample["decomposed_questions_" + LLM.model]:
+                    print("decomposed not exist")
                     split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
                     res = LLM.complete(split_prompt + "\n" + question)
                     answer = res.text
                     data_sample["decomposed_questions_" + LLM.model] = answer
                 else:
+                    print("decomposed exist")
                     answer = data_sample["decomposed_questions_" + LLM.model]
                 print(answer)
                 question_list = split_string_with_number_and_double_asterisks(answer)
@@ -837,7 +839,7 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
 def split_string_with_number_and_double_asterisks(input_string):
     # Using regular expression to split the string
     substrings = re.findall(r'\d+\..*?\*\*', input_string)
-    print("substrings: " + substrings )
+    print(substrings)
     # Remove "**" and the number from each substring
     cleaned_substrings = [re.sub(r'\d+\.\s*', '', substring[:-2]) for substring in substrings]
     
