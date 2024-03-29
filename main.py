@@ -839,7 +839,7 @@ def main():
                 # print(expect)
                 y_true.append(int(expect[0]))
                 split_prompt = "Provide a better search query for web search engine to answer the given question, end \
-                    the queries with double asterisks. Questoin: {question} \n Answer:"
+                    the queries with double asterisks. Question: {question} \n Answer:"
                 res = LLM.complete(split_prompt)
                 answer = res.text
                 if not answer.endswith("**"):
