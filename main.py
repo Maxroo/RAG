@@ -808,7 +808,7 @@ def main():
                 with open("log.txt", "a") as log:
                     log.write(f"Question: {question} | expect: {expect[0]} | Answer: {res.text} | Took: {time.time() - question_timer} |")
                 with open("log-qr.txt", "a") as log:
-                    log.write(f"{question_count} {int(expect[0])} {pred}")
+                    log.write(f"{question_count} {int(expect[0])} {pred}\n")
             with open("result-qr.txt", "a") as result:
                 result.write(f"\n query rewrite file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
