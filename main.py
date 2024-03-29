@@ -754,10 +754,10 @@ def main():
         print(answer)
         question_list = split_string_with_number_and_double_asterisks(answer)
         texts = [] # list of texts from elastic search
-        if elastic_search_file_size / len(question_list) < 1:
+        if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
             search_size = 1
         else:
-            search_size = elastic_search_file_size / len(question_list)
+            search_size = ELASTIC_SEARCH_FILE_SIZE / len(question_list)
         for q in question_list:
             print(q)
             request, headers, payload = construct_request(q, size = search_size)
