@@ -765,7 +765,6 @@ def main():
                 question=data_sample["claim"]  # original claim
                 # print(expect)
                 y_true.append(int(expect[0]))
-        
                 if not data_sample["decomposed_questions_" + LLM.model]:
                     split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
                     res = LLM.complete(split_prompt + "\n" + question)
@@ -791,7 +790,7 @@ def main():
                     response = rq.get(request, headers=headers, json=payload)
                     # answer, token_usage = get_response_no_index(question ,response)
                     text = get_texts_from_response(response)
-                    contexts.extend(semintic_search(q, text, top_x=top, chunk_length))
+                    contexts.extend(semintic_search(q, text, top_x=top, chunk_length = chunk_length))
                 # print(contexts)
                 prompt = construct_query_rewrite_prompt(question_list, question, contexts)
                 res = LLM.complete(prompt)
