@@ -1,0 +1,9 @@
+Convert the question to decomposed questions
+the each decomposed question must end with **, the result must not contain newline 
+
+Example:  
+    question:
+        "The song recorded by Fergie that was produced by Polow da Don and was followed by Life Goes On was M.I.L.F.$."
+
+    result:
+        which song was recorded by Fergie?**Which song was produced by Polow?**which song was followed by Life Goes On?** 

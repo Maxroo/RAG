@@ -755,6 +755,7 @@ def main():
             elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
             question_count = 0
             # maximum token openAI 3.5 can handle is 4096
+            
             y_true = []
             y_pred = []
             start = time.time()
@@ -765,9 +766,12 @@ def main():
                 question=data_sample["claim"]  # original claim
                 # print(expect)
                 y_true.append(int(expect[0]))
-                split_prompt = "can you decomposition the following question, put the decomposition in one string without newline and add ** at the end of each decompositioned question?"
-                res = LLM.complete(split_prompt + "\n" + question)
+                with open('example.txt', 'r') as file:
+                    split_prompt = file.read()
+                res = LLM.complete(split_prompt + "\n Now convert:" + question)
                 answer = res.text
+                if not answer.endswith("**"):
+                    answer += "**"
                 print(answer)
                 question_list = split_string_with_number_and_double_asterisks(answer)
                 print(question_list)
@@ -793,12 +797,18 @@ def main():
                 # print(contexts)
                 prompt = construct_query_rewrite_prompt(question_list, question, new_contexts)
                 res = LLM.complete(prompt)
+                pred = 0
                 if check_true_false_order(res.text):
+                    pred = 1
                     y_pred.append(1)
                 else :
+                    pred = 0
                     y_pred.append(0)
+
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {res.text} | Took: {time.time() - question_timer} |")
                 with open("log-qr.txt", "a") as log:
-                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
+                    log.write(f"{question_count} {int(expect[0])} {pred}")
             with open("result-qr.txt", "a") as result:
                 result.write(f"\n query rewrite file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
