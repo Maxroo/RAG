@@ -94,7 +94,7 @@ def send_to_openai(question, texts):
     return answer, token_usage
 
 def send_to_together(question, texts):
-    res = utils.togetherai_query(question + " . Is the statement true or false?", texts, llm = LLM)
+    res = utils.togetherai_query(question + " .Is the statement true or false?", texts, llm = LLM)
     return res
 
 def check_true_false_order(string):
