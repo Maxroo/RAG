@@ -814,6 +814,62 @@ def main():
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s | Total Token used: {token_used}\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
+                
+    elif mode == '-qr2':
+        print("query rewriting2")
+        file_path = sys.argv[2]
+        files = file_path.split()
+        for file_name in files:
+            with open("log-qr.txt", "w"):
+                pass
+            file = pd.read_csv(file_name)
+            top_x = 6
+            chunk_length = 256
+            elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
+            question_count = 0
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            start = time.time()
+            for i, data_sample in file.iterrows():
+                question_count += 1
+                question_timer = time.time()
+                expect=data_sample['label'],
+                question=data_sample["claim"]  # original claim
+                # print(expect)
+                y_true.append(int(expect[0]))
+                split_prompt = "Provide a better search query for web search engine to answer the given question, end \
+                    the queries with double asterisks. Questoin: {question} \n Answer:"
+                res = LLM.complete(split_prompt)
+                answer = res.text
+                if not answer.endswith("**"):
+                    answer += "**"
+                answer = answer.strip("**")
+                print(answer)
+                request, headers, payload = construct_request(answer, size = search_size)
+                response = rq.get(request, headers=headers, json=payload)
+                # answer, token_usage = get_response_no_index(question ,response)
+                text = get_texts_from_response(response)
+                context = semintic_search(answer, text, top_x=top, chunk_length = chunk_length)
+                # print(contexts)
+                res = send_to_together(answer, context)
+                pred = 0
+                if check_true_false_order(res):
+                    pred = 1
+                    y_pred.append(1)
+                else :
+                    pred = 0
+                    y_pred.append(0)
+
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {res} | Took: {time.time() - question_timer} \n")
+                with open("log-qr.txt", "a") as log:
+                    log.write(f"{question_count} {int(expect[0])} {pred}\n")
+            with open("result-qr.txt", "a") as result:
+                result.write(f"\n query rewrite file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write("\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s | Total Token used: {token_used}\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
