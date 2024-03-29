@@ -750,6 +750,8 @@ def main():
             with open("log-qr.txt", "w"):
                 pass
             file = pd.read_csv(file_name)
+            if "decomposed_questions_" + LLM.model not in file.columns:
+                file["decomposed_questions_" + LLM.model] = None
             top_x = 3
             chunk_length = 256
             elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
@@ -798,9 +800,9 @@ def main():
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
-                with open("log.txt", "a") as log:
+                with open("log-qr.txt", "a") as log:
                     log.write(f"Question: {question} | expect: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
-            with open("result.txt", "a") as result:
+            with open("result-qr.txt", "a") as result:
                 result.write(f"\n query rewrite file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
                 result.write("\n------------------------------------------------------------------------------------------------------------------\n")
                 result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s | Total Token used: {token_used}\n")
