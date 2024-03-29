@@ -770,6 +770,7 @@ def main():
             texts.extend(text)
         
         context = semintic_search(question, texts, top_x)
+        print(context)
         # prompt = construct_query_rewrite_prompt(question_list, question, texts)
         # res = LLM.complete(prompt)
         # print(res.text)
