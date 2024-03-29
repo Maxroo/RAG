@@ -822,6 +822,8 @@ def main():
         for file_name in files:
             with open("log-qr.txt", "w"):
                 pass
+            with open("log.txt", "w"):
+                pass
             file = pd.read_csv(file_name)
             top_x = 6
             chunk_length = 256
