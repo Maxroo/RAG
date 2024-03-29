@@ -751,9 +751,9 @@ def main():
         question = arg_question
         split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
 
-        # prompt = construct_prompt(question, documents)
-        res = LLM.complete(split_prompt + "\n" + question)
-        answer = res.text
+        # res = LLM.complete(split_prompt + "\n" + question)
+        # answer = res.text
+        answer = "1. Is Gregg Rolie a keyboardist?**2. Is Rob Tyner a keyboardist?**"
         print(answer)
         question_list = split_string_with_number_and_double_asterisks(answer)
         texts = [] # list of texts from elastic search
@@ -775,7 +775,7 @@ def main():
             # answer, token_usage = get_response_no_index(question ,response)
             text = get_texts_from_response(response)
             texts.extend(text)
-            contexts.extend(semintic_search(q, text, top))
+            contexts.extend(semintic_search(q, text, top_x=top))
         print(contexts)
         # prompt = construct_query_rewrite_prompt(question_list, question, texts)
         # res = LLM.complete(prompt)
