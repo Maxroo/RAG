@@ -806,7 +806,7 @@ def main():
                     y_pred.append(0)
 
                 with open("log.txt", "a") as log:
-                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {res.text} | Took: {time.time() - question_timer} |")
+                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {res.text} | Took: {time.time() - question_timer} \n")
                 with open("log-qr.txt", "a") as log:
                     log.write(f"{question_count} {int(expect[0])} {pred}\n")
             with open("result-qr.txt", "a") as result:
