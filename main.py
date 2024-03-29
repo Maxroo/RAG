@@ -842,12 +842,14 @@ def main():
                 y_true.append(int(expect[0]))
                 split_prompt = "Provide a better search query for web search engine to answer the given question, end \
                     the queries with double asterisks. Question: {question} \n Answer:"
+                print("prompt: " + split_prompt)
                 res = LLM.complete(split_prompt)
                 answer = res.text
                 if not answer.endswith("**"):
                     answer += "**"
                 answer = answer.strip("**")
-                print(answer)
+                print("question: " + question)
+                print("new query: " + answer)
                 request, headers, payload = construct_request(answer, size = ELASTIC_SEARCH_FILE_SIZE)
                 response = rq.get(request, headers=headers, json=payload)
                 # answer, token_usage = get_response_no_index(question ,response)
