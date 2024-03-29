@@ -81,9 +81,9 @@ def get_texts_from_response(response):
         texts.append(source.get('text', 'N/A'))
     return texts
 
-def semintic_search(question, texts):
+def semintic_search(question, texts, top_x):
     # print(f"Question: {arg_question}")
-    relevant_context = utils.retrieve_context_from_texts(texts, question)
+    relevant_context = utils.retrieve_context_from_texts(texts, question, top_x = top_x)
     return relevant_context
 
 def send_to_openai(question, texts):
@@ -273,7 +273,7 @@ def main():
                 timer = time.time()
                 # answer, token_usage = get_response_no_index(question ,response)
                 texts = get_texts_from_response(response)
-                context = semintic_search(question, texts)
+                context = semintic_search(question, texts, top_x)
                 semintic_search_time = time.time()-timer
                 timer = time.time()
                 answer = None
@@ -742,6 +742,7 @@ def main():
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     elif mode == '-qr':
+        top_x = 3
         print("Test query rewriting")
         arg_question = sys.argv[2]
         if(arg_question == "test"):
@@ -767,8 +768,8 @@ def main():
             # answer, token_usage = get_response_no_index(question ,response)
             text = get_texts_from_response(response)
             texts.extend(text)
-        context = semintic_search(question, texts)
-        print(context)
+        
+        context = semintic_search(question, texts, top_x)
         # prompt = construct_query_rewrite_prompt(question_list, question, texts)
         # res = LLM.complete(prompt)
         # print(res.text)
