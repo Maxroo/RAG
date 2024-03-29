@@ -764,7 +764,7 @@ def main():
             response = rq.get(request, headers=headers, json=payload)
             # answer, token_usage = get_response_no_index(question ,response)
             text = get_texts_from_response(response)
-            texts.append(text)
+            texts.extend(text)
         context = semintic_search(question, texts)
         prompt = construct_query_rewrite_prompt(question_list, question, texts)
         res = LLM.complete(prompt)
