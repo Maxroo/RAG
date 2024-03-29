@@ -757,10 +757,17 @@ def main():
         print(answer)
         question_list = split_string_with_number_and_double_asterisks(answer)
         texts = [] # list of texts from elastic search
+        contexts = [] # list of contexts from semantic search
         if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
             search_size = 1
         else:
-            search_size = ELASTIC_SEARCH_FILE_SIZE / len(question_list)
+            search_size = ELASTIC_SEARCH_FILE_SIZE / len(question_list)    
+
+        if  top_x/ len(question_list) < 1:
+            top = 1
+        else:
+            top = top_x/ len(question_list)
+        
         for q in question_list:
             print(q)
             request, headers, payload = construct_request(q, size = search_size)
@@ -768,9 +775,8 @@ def main():
             # answer, token_usage = get_response_no_index(question ,response)
             text = get_texts_from_response(response)
             texts.extend(text)
-        
-        context = semintic_search(question, texts, top_x)
-        print(context)
+            contexts.extend(semintic_search(q, text, top))
+        print(contexts)
         # prompt = construct_query_rewrite_prompt(question_list, question, texts)
         # res = LLM.complete(prompt)
         # print(res.text)
