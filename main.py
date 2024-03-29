@@ -584,31 +584,31 @@ def main():
                     titles.append(title)
                     texts.append(text)
                     ids.append(id)
-                 
+
                 timer = time.time()
                 if len(texts) != 0:
                     index_nodes = utils.parse_hierarchy_nodes_chromadb_return_index(texts, None, emd_model_llama, chunk_size = chunk_size, llm = LLM)
                     engine = utils.get_hierarchy_node_query_engine(index_nodes, similarity_top_k = similarity_top_k, rerank_top_n = rerank_top_n)
                 index_time = time.time()-timer
-                
+
                 timer = time.time()
                 query_answer = engine.query(question + "Is the statement true or false?")
                 query_time = time.time()-timer
-                
+
                 answer = query_answer.response
                 if compare_response(answer, expected):
-                    correct += 1 
+                    correct += 1
                 question_count += 1
-                
+
                 if check_true_false_order(answer):
                     y_pred.append(1)
                 else :
                     y_pred.append(0)
-                
+
                 with open("log-vh.txt", "a") as log:
                     log.write(f"Question: {question} | Expected: {expected} | Answer: {answer} | Took: {time.time() - question_timer} |")
-                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")    
-            
+                    log.write(f"query_time took {query_time} seconds, index_time took {index_time} seconds\n")
+
             with open("result-vh.txt", "a") as result:
                 result.write(f"\n mode: llamaindex, hierarchy node |  file: {file_path} | chunk_size: {chunk_size} | similarity top k: {similarity_top_k} | rerank_top_n : {rerank_top_n}  | elastic_search_file_size: {elastic_search_file_size}")
                 result.write(f"\n------------------------------------------------------------------------------------------------------------------\n")
@@ -634,7 +634,7 @@ def main():
                 expect=data_sample['label'],
                 claim=data_sample["FOL_result_gpt-4-1106-preview"].splitlines()[-1]  # last line of FOL_result, anglicized claim
                 question=data_sample["claim"]  # original claim
-                # print(expect)
+
                 y_true.append(int(expect[0]))
                 request, headers, payload = construct_request(question, size = elastic_search_file_size)
                 response = rq.get(request, headers=headers, json=payload)
@@ -738,9 +738,69 @@ def main():
                 result.write(f"model: {LLM.model} | Total question: {question_count} | corrects: {correct} | Accuracy: {correct/question_count * 100}% | took {time.time() - start}s | Total Token used: {token_used}\n")
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
+    elif mode == '-qr':
+        print("Test query rewriting")
+        arg_question = sys.argv[2]
+        if(arg_question == "test"):
+            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
+        print(f"Question: {arg_question}")
+        question = arg_question
+        split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
+
+        # prompt = construct_prompt(question, documents)
+        res = LLM.complete(split_prompt + "\n" + question)
+        answer = res.text
+        print(answer)
+        question_list = split_string_with_number_and_double_asterisks(answer)
+        texts = [] # list of texts from elastic search
+        if elastic_search_file_size / len(question_list) < 1:
+            search_size = 1
+        else:
+            search_size = elastic_search_file_size / len(question_list)
+        for q in question_list:
+            print(q)
+            request, headers, payload = construct_request(q, size = search_size)
+            response = rq.get(request, headers=headers, json=payload)
+            # answer, token_usage = get_response_no_index(question ,response)
+            text = get_texts_from_response(response)
+            texts.append(text)
+        context = semintic_search(question, texts)
+        prompt = construct_query_rewrite_prompt(question_list, question, texts)
+        res = LLM.complete(prompt)
+        print(res.text)
+
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
         return
+
+def construct_query_rewrite_prompt(question_list, origin_question, documents):
+    prompt_start = (
+    "based on the context below.\n\n"+
+    "Context:\n"
+    )
+
+    prompt_end = (
+        f"Answer these question first: "
+    )
+
+    for q in question_list:
+        prompt_end += f"\n{q}"
+    prompt_end += f"\n\nThen answer the original question: {origin_question}. True or False?\n"
+    prompt = (
+        prompt_start + "\n\n---\n\n".join(documents) + 
+        prompt_end
+    )
+    return prompt
+    
+
+def split_string_with_number_and_double_asterisks(input_string):
+    # Using regular expression to split the string
+    substrings = re.findall(r'\d+.*?\*\*', input_string)
+    
+    # Remove "**" and the number from each substring
+    cleaned_substrings = [re.sub(r'\d+\.? ', '', substring[:-2]) for substring in substrings]
+    
+    return cleaned_substrings
 
 if __name__ == "__main__":
     main()
