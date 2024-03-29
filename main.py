@@ -846,11 +846,11 @@ def main():
                     answer += "**"
                 answer = answer.strip("**")
                 print(answer)
-                request, headers, payload = construct_request(answer, size = search_size)
+                request, headers, payload = construct_request(answer, size = ELASTIC_SEARCH_FILE_SIZE)
                 response = rq.get(request, headers=headers, json=payload)
                 # answer, token_usage = get_response_no_index(question ,response)
                 text = get_texts_from_response(response)
-                context = semintic_search(answer, text, top_x=top, chunk_length = chunk_length)
+                context = semintic_search(answer, text, top_x=top_x, chunk_length = chunk_length)
                 # print(contexts)
                 res = send_to_together(answer, context)
                 pred = 0
