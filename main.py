@@ -774,7 +774,7 @@ def main():
                     data_sample["decomposed_questions_" + LLM.model] = answer
                 else:
                     answer = data_sample["decomposed_questions_" + LLM.model]
-                    
+                print(answer)
                 question_list = split_string_with_number_and_double_asterisks(answer)
                 contexts = [] # list of contexts from semantic search
                 if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
