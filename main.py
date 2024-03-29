@@ -20,7 +20,7 @@ LLM = None
 mode = ''
 is_openAI = False
 
-ELASTIC_SEARCH_FILE_SIZE = 3
+ELASTIC_SEARCH_FILE_SIZE = 6
 
 def get_file_set(filename):
     try:
@@ -777,7 +777,7 @@ def main():
             text = get_texts_from_response(response)
             texts.extend(text)
             contexts.extend(semintic_search(q, text, top_x=top))
-        print(contexts)
+        # print(contexts)
         # prompt = construct_query_rewrite_prompt(question_list, question, texts)
         # res = LLM.complete(prompt)
         # print(res.text)
