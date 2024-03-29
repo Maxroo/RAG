@@ -20,7 +20,7 @@ LLM = None
 mode = ''
 is_openAI = False
 
-ELASTIC_SEARCH_FILE_SIZE = 4
+ELASTIC_SEARCH_FILE_SIZE = 3
 
 def get_file_set(filename):
     try:
