@@ -846,8 +846,9 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
 
 def split_string_with_number_and_double_asterisks(input_string):
     string = input_string.split("**")
-    
-    return string
+    cleaned_list = [string.strip() for string in string_list if string.strip()]
+
+    return cleaned_list
 
 if __name__ == "__main__":
     main()
