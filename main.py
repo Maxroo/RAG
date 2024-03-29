@@ -750,7 +750,7 @@ def main():
             with open("log-qr.txt", "w"):
                 pass
             file = pd.read_csv(file_name)
-            if "decomposed_questions_" + LLM.model not in file.columns:
+            if ("decomposed_questions_" + LLM.model) not in file.columns:
                 file["decomposed_questions_" + LLM.model] = None
             top_x = 3
             chunk_length = 256
