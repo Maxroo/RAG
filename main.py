@@ -76,6 +76,8 @@ def get_texts_from_response(response):
     texts = []
     for hit in json_response['hits']['hits']:
         source = hit['_source']
+        title = source.get('title', 'N/A')
+        print("title:", title)
         texts.append(source.get('text', 'N/A'))
     return texts
 
@@ -765,10 +767,10 @@ def main():
             # answer, token_usage = get_response_no_index(question ,response)
             text = get_texts_from_response(response)
             texts.extend(text)
-        context = semintic_search(question, texts)
-        prompt = construct_query_rewrite_prompt(question_list, question, texts)
-        res = LLM.complete(prompt)
-        print(res.text)
+        # context = semintic_search(question, texts)
+        # prompt = construct_query_rewrite_prompt(question_list, question, texts)
+        # res = LLM.complete(prompt)
+        # print(res.text)
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
