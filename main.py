@@ -743,44 +743,69 @@ def main():
                 result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     elif mode == '-qr':
-        top_x = 3
-        print("Test query rewriting")
-        arg_question = sys.argv[2]
-        if(arg_question == "test"):
-            arg_question = "Gregg Rolie and Rob Tyner, are not a keyboardist."
-        print(f"Question: {arg_question}")
-        question = arg_question
-        split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
-
-        # res = LLM.complete(split_prompt + "\n" + question)
-        # answer = res.text
-        answer = "1. Is Gregg Rolie a keyboardist?**2. Is Rob Tyner a keyboardist?**"
-        print(answer)
-        question_list = split_string_with_number_and_double_asterisks(answer)
-        texts = [] # list of texts from elastic search
-        contexts = [] # list of contexts from semantic search
-        if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
-            search_size = 1
-        else:
-            search_size = math.ceil((ELASTIC_SEARCH_FILE_SIZE / len(question_list)))
-
-        if  top_x/ len(question_list) < 1:
-            top = 1
-        else:
-            top = math.ceil((top_x/ len(question_list)))
+        print("query rewriting")
+        file_path = sys.argv[2]
+        files = file_path.split()
+        for file_name in files:
+            with open("log-qr.txt", "w"):
+                pass
+            file = pd.read_csv(file_name)
+            top_x = 3
+            chunk_length = 256
+            elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
+            question_count = 0
+            # maximum token openAI 3.5 can handle is 4096
+            y_true = []
+            y_pred = []
+            start = time.time()
+            for i, data_sample in file.iterrows():
+                question_count += 1
+                question_timer = time.time()
+                expect=data_sample['label'],
+                question=data_sample["claim"]  # original claim
+                # print(expect)
+                y_true.append(int(expect[0]))
         
-        for q in question_list:
-            print(q)
-            request, headers, payload = construct_request(q, size = search_size)
-            response = rq.get(request, headers=headers, json=payload)
-            # answer, token_usage = get_response_no_index(question ,response)
-            text = get_texts_from_response(response)
-            texts.extend(text)
-            contexts.extend(semintic_search(q, text, top_x=top))
-        # print(contexts)
-        # prompt = construct_query_rewrite_prompt(question_list, question, texts)
-        # res = LLM.complete(prompt)
-        # print(res.text)
+                if not data_sample["decomposed_questions_" + LLM.model]:
+                    split_prompt = "can you decomposition the following question and put in a list and add a ** at the end of each decompositioned question?"
+                    res = LLM.complete(split_prompt + "\n" + question)
+                    answer = res.text
+                    data_sample["decomposed_questions_" + LLM.model] = answer
+                else:
+                    answer = data_sample["decomposed_questions_" + LLM.model]
+                    
+                question_list = split_string_with_number_and_double_asterisks(answer)
+                contexts = [] # list of contexts from semantic search
+                if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
+                    search_size = 1
+                else:
+                    search_size = math.ceil((ELASTIC_SEARCH_FILE_SIZE / len(question_list)))
+
+                if  top_x/ len(question_list) < 1:
+                    top = 1
+                else:
+                    top = math.ceil((top_x/ len(question_list)))
+                for q in question_list:
+                    print(q)
+                    request, headers, payload = construct_request(q, size = search_size)
+                    response = rq.get(request, headers=headers, json=payload)
+                    # answer, token_usage = get_response_no_index(question ,response)
+                    text = get_texts_from_response(response)
+                    contexts.extend(semintic_search(q, text, top_x=top, chunk_length))
+                # print(contexts)
+                prompt = construct_query_rewrite_prompt(question_list, question, contexts)
+                res = LLM.complete(prompt)
+                if check_true_false_order(res.text):
+                    y_pred.append(1)
+                else :
+                    y_pred.append(0)
+                with open("log.txt", "a") as log:
+                    log.write(f"Question: {question} | expect: {expect[0]} | Answer: {answer} | Took: {time.time() - question_timer} |")
+            with open("result.txt", "a") as result:
+                result.write(f"\n query rewrite file: {file_name} | mode: {mode} | top_x: {top_x} | chunk_length: {chunk_length} | elastic_search_file_size: {elastic_search_file_size}")
+                result.write("\n------------------------------------------------------------------------------------------------------------------\n")
+                result.write(f"model: {LLM.model} | Total question: {question_count} | took {time.time() - start}s | Total Token used: {token_used}\n")
+                result.write(f"Classification report: \n{classification_report(y_true, y_pred)}")
 
     else:
         print("Invalid mode, Usage python3 main.py -q <question> or python3 main.py -f <file_path>")
