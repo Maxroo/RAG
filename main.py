@@ -770,7 +770,7 @@ def main():
                 y_true.append(int(expect[0]))
                 if not data_sample["decomposed_questions_" + LLM.model]:
                     print("decomposed not exist")
-                    split_prompt = "can you decomposition the following question in one string without newline and add ** at the end of each decompositioned question?"
+                    split_prompt = "can you decomposition the following question, put the decomposition in one string without newline and add ** at the end of each decompositioned question?"
                     res = LLM.complete(split_prompt + "\n" + question)
                     answer = res.text
                     data_sample["decomposed_questions_" + LLM.model] = answer
@@ -778,7 +778,7 @@ def main():
                 else:
                     print("decomposed exist")
                     # answer = data_sample["decomposed_questions_" + LLM.model]
-                    split_prompt = "can you decomposition the following question in one string without newline and add ** at the end of each decompositioned question?"
+                    split_prompt = "can you decomposition the following question without newline and add ** at the end of each decompositioned question?"
                     res = LLM.complete(split_prompt + "\n" + question)
                     answer = res.text
                     data_sample["decomposed_questions_" + LLM.model] = answer
@@ -804,8 +804,9 @@ def main():
                     # answer, token_usage = get_response_no_index(question ,response)
                     text = get_texts_from_response(response)
                     contexts.extend(semintic_search(q, text, top_x=top, chunk_length = chunk_length))
+                new_contexts = semintic_search(question, contexts, top_x=top_x, chunk_length = chunk_length)
                 # print(contexts)
-                prompt = construct_query_rewrite_prompt(question_list, question, contexts)
+                prompt = construct_query_rewrite_prompt(question_list, question, new_contexts)
                 res = LLM.complete(prompt)
                 if check_true_false_order(res.text):
                     y_pred.append(1)
@@ -846,7 +847,7 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
 def split_string_with_number_and_double_asterisks(input_string):
     string = input_string.split("**")
     
-    return cleaned_substrings
+    return string
 
 if __name__ == "__main__":
     main()
