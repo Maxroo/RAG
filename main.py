@@ -778,11 +778,12 @@ def main():
                 else:
                     print("decomposed exist")
                     # answer = data_sample["decomposed_questions_" + LLM.model]
-                    split_prompt = "can you decomposition the following question without newline and add ** at the end of each decompositioned question?"
-                    res = LLM.complete(split_prompt + "\n" + question)
-                    answer = res.text
-                    data_sample["decomposed_questions_" + LLM.model] = answer
-                    file.to_csv(file_name, index=False)
+                    # split_prompt = "can you decomposition the following question without newline and add ** at the end of each decompositioned question?"
+                    # res = LLM.complete(split_prompt + "\n" + question)
+                    # answer = res.text
+                    # data_sample["decomposed_questions_" + LLM.model] = answer
+                    # file.to_csv(file_name, index=False)
+                    answer = data_sample["decomposed_questions_" + LLM.model]
                 print(answer)
                 question_list = split_string_with_number_and_double_asterisks(answer)
                 print(question_list)
@@ -845,7 +846,7 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
     
 
 def split_string_with_number_and_double_asterisks(input_string):
-    string = input_string.split("**")
+    string_list = input_string.split("**")
     cleaned_list = [string.strip() for string in string_list if string.strip()]
 
     return cleaned_list
