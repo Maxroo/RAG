@@ -752,6 +752,7 @@ def main():
             file = pd.read_csv(file_name)
             if ("decomposed_questions_" + LLM.model) not in file.columns:
                 file["decomposed_questions_" + LLM.model] = None
+                file.to_csv(file_name, index=False)
             top_x = 3
             chunk_length = 256
             elastic_search_file_size = ELASTIC_SEARCH_FILE_SIZE
@@ -773,6 +774,7 @@ def main():
                     res = LLM.complete(split_prompt + "\n" + question)
                     answer = res.text
                     data_sample["decomposed_questions_" + LLM.model] = answer
+                    file.to_csv(file_name, index=False)
                 else:
                     print("decomposed exist")
                     answer = data_sample["decomposed_questions_" + LLM.model]
