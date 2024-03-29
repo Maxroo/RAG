@@ -769,7 +769,7 @@ def main():
                 y_true.append(int(expect[0]))
                 if not data_sample["decomposed_questions_" + LLM.model]:
                     print("decomposed not exist")
-                    split_prompt = "can you decomposition the following question and put in a numbered list and add a ** at the end of each decompositioned question?"
+                    split_prompt = "can you decomposition the following question and put in a numbered list without newline and add ** at the end of each decompositioned question?"
                     res = LLM.complete(split_prompt + "\n" + question)
                     answer = res.text
                     data_sample["decomposed_questions_" + LLM.model] = answer
