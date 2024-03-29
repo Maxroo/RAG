@@ -82,9 +82,9 @@ def get_texts_from_response(response):
         texts.append(source.get('text', 'N/A'))
     return texts
 
-def semintic_search(question, texts, top_x):
+def semintic_search(question, texts, top_x, chunk_length):
     # print(f"Question: {arg_question}")
-    relevant_context = utils.retrieve_context_from_texts(texts, question, top_x = top_x)
+    relevant_context = utils.retrieve_context_from_texts(texts, question, top_x = top_x, chunk_length = chunk_length)
     return relevant_context
 
 def send_to_openai(question, texts):
