@@ -836,10 +836,10 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
 
 def split_string_with_number_and_double_asterisks(input_string):
     # Using regular expression to split the string
-    substrings = re.findall(r'\d+.*?\*\*', input_string)
+    substrings = re.findall(r'\d+\..*?\*\*', input_string)
     
     # Remove "**" and the number from each substring
-    cleaned_substrings = [re.sub(r'\d+\.? ', '', substring[:-2]) for substring in substrings]
+    cleaned_substrings = [re.sub(r'\d+\.\s*', '', substring[:-2]) for substring in substrings]
     
     return cleaned_substrings
 
