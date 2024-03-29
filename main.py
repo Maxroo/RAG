@@ -831,7 +831,7 @@ def construct_query_rewrite_prompt(question_list, origin_question, documents):
 
     for q in question_list:
         prompt_end += f"\n{q}"
-    prompt_end += f"\n\nThen answer the original question: {origin_question}. True or False?\n"
+    prompt_end += f"\n\nThen answer the original question: {origin_question}. Give me a True or False answer?\n"
     prompt = (
         prompt_start + "\n\n---\n\n".join(documents) + 
         prompt_end
