@@ -13,6 +13,7 @@ import openai
 import utils
 import pandas as pd
 import re
+import math
 
 CONFIG = None
 LLM = None
@@ -761,12 +762,12 @@ def main():
         if ELASTIC_SEARCH_FILE_SIZE / len(question_list) < 1:
             search_size = 1
         else:
-            search_size = round(ELASTIC_SEARCH_FILE_SIZE / len(question_list))
+            search_size = math.ceil((ELASTIC_SEARCH_FILE_SIZE / len(question_list)))
 
         if  top_x/ len(question_list) < 1:
             top = 1
         else:
-            top = round(top_x/ len(question_list))
+            top = math.ceil((top_x/ len(question_list)))
         
         for q in question_list:
             print(q)
